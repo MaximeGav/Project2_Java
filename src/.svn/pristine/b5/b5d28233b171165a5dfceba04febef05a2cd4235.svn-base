@@ -1,0 +1,98 @@
+package domein;
+
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+
+@Entity
+public class Beschikbaarheid {
+    
+    //Attributen
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int beschikbaarheidsId;
+    
+    
+    private int dag, tijdsvak;
+    //private int promotorId;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    private Promotor promotor;
+    
+    //Constructors
+
+    //Constructors
+    /*
+    public Beschikbaarheid(int id, int dag, int tijdsvak, int promotorId) {
+        this.id = id;
+        this.dag = dag;
+        this.tijdsvak = tijdsvak;
+        this.promotorId = promotorId;
+    }*/
+
+    //private int promotorId;
+    //Constructors
+    //Constructors
+    /*
+    public Beschikbaarheid(int id, int dag, int tijdsvak, int promotorId) {
+    this.id = id;
+    this.dag = dag;
+    this.tijdsvak = tijdsvak;
+    this.promotorId = promotorId;
+    }*/
+    public Beschikbaarheid(int dag, int tijdsvak) {
+        this.dag = dag;
+        this.tijdsvak = tijdsvak;
+    }
+    
+    
+    //Methodes
+    
+    
+    //Getters & Setters
+    /*public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }*/
+
+    public int getDag() {
+        return dag;
+    }
+
+    public void setDag(int dag) {
+        this.dag = dag;
+    }
+
+    public int getTijdsvak() {
+        return tijdsvak;
+    }
+
+    public void setTijdsvak(int tijdsvak) {
+        this.tijdsvak = tijdsvak;
+    }
+
+    /*public int getPromotorId() {
+        return promotorId;
+    }
+
+    public void setPromotorId(int promotorId) {
+        this.promotorId = promotorId;
+    }*/
+
+    public int getBeschikbaarheidsId() {
+        return beschikbaarheidsId;
+    }
+
+    public void setBeschikbaarheidsId(int beschikbaarheidsId) {
+        this.beschikbaarheidsId = beschikbaarheidsId;
+    }
+    
+    
+}

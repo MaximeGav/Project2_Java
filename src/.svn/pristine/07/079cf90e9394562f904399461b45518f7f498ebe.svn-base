@@ -1,0 +1,58 @@
+package domein;
+
+import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+
+@Entity
+public class Inschrijving implements Serializable {
+    
+    //Attributen
+    @Id
+    private int id;
+    private int presentatieId;
+    private boolean isGoedgekeurd;
+    
+    @OneToOne(optional = false)
+    private Gast gast;
+
+    public Inschrijving() {
+    }
+
+    //Constructors
+    public Inschrijving(int id, int presentatieId, int gastId, boolean isGoedgekeurd) {
+        this.id = id;
+        this.presentatieId = presentatieId;
+        this.isGoedgekeurd = isGoedgekeurd;
+    }
+    
+    //Methodes
+    
+
+    //Getters & Setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getPresentatieId() {
+        return presentatieId;
+    }
+
+    public void setPresentatieId(int presentatieId) {
+        this.presentatieId = presentatieId;
+    }
+
+
+    public boolean isIsGoedgekeurd() {
+        return isGoedgekeurd;
+    }
+
+    public void setIsGoedgekeurd(boolean isGoedgekeurd) {
+        this.isGoedgekeurd = isGoedgekeurd;
+    }
+}

@@ -1,0 +1,23 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package persistentie.dao;
+
+import domein.Gast;
+import domein.enums.DAO;
+import persistentie.DAOFactory;
+
+/**
+ *
+ * @author MAXIME
+ */
+public class GastRepository {
+    
+    public Gast findGastByEmail(String email) {
+        return (Gast) DAOFactory.getDAO(DAO.GAST).get(email);
+    }
+    
+}

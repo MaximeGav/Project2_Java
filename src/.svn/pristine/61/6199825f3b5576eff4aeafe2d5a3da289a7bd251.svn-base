@@ -1,0 +1,131 @@
+package domein;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Transient;
+import persistentie.DaoFactory;
+import persistentie.GebruikerDao;
+import persistentie.GenericDao;
+
+@Entity
+@DiscriminatorValue("Student")
+public class Student extends Gebruiker {
+
+    //Attributen
+    //private int promotorId;
+    @ManyToMany(fetch = FetchType.LAZY)
+    private Campus campus;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    private Presentatie presentatie;
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    private Promotor promotor;
+    
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Voorstel> voorstellen;
+    
+    @Transient
+    private GenericDao<Campus> campusdao;
+
+    //Constructor
+    public Student(String voornaam, String famnaam, String email, String wachtwoord, String campusNaam, GenericDao<Campus> campusdao) {
+        super(voornaam, famnaam, email, wachtwoord);
+        voorstellen = new ArrayList<>();
+        this.campusdao = campusdao;
+        campus = campusdao.get(campusNaam);
+        
+    }
+    
+    public Student(String voornaam, String famnaam, String email, String wachtwoord, Promotor promotor, String campusNaam, GenericDao<Campus> campusdao) {
+        super(voornaam, famnaam, email, wachtwoord);
+        this.promotor = promotor;
+        voorstellen = new ArrayList<>();
+        this.campusdao = campusdao;
+        campus = campusdao.get(campusNaam);
+    }
+    
+    public Student(String voornaam, String famnaam, String email, String wachtwoord, String campusNaam)
+    {
+        this(voornaam, famnaam, email, wachtwoord, campusNaam, (GenericDao) DaoFactory.getDao("StudentDao"), (GebruikerDao) DaoFactory.getDao("PromotorDao"));
+    }
+    
+    /*public Student(int id, String voornaam, String famnaam, String email, String wachtwoord, int promotorId) {
+        super(id, voornaam, famnaam, email, wachtwoord);
+        this.promotorId = promotorId;
+    }*/
+
+    //Methoden
+    /**
+     * Methode om alle gegevens van een student weer te geven
+     * @return Opsomming van de gegevens van de student
+     */
+    @Override
+    public String toString() {
+        if (hasPromotor()) {
+            return super.toString();// + " heeft reeds een promotor.";
+        } else {
+            return super.toString();
+        }
+    }
+
+    //Getters & Setters
+    /*public int getPromotorId() {
+        return promotorId;
+    }
+
+    public void setPromotorId(int promotorId) {
+        this.promotorId = promotorId;
+    }*/
+    
+    public boolean hasPromotor() {
+        return (this.promotor != null);
+    }
+
+    /*public String getCampus() {
+        return campus;
+    }
+
+    public void setCampus(String campus) {
+        this.campus = campus;
+    }*/
+
+    public Presentatie getPresentatie() {
+        return presentatie;
+    }
+
+    public void setPresentatie(Presentatie presentatie) {
+        this.presentatie = presentatie;
+    }
+
+    public Campus getCampus() {
+        return campus;
+    }
+
+    public void setCampus(Campus campus) {
+        this.campus = campus;
+    }
+
+    public Promotor getPromotor() {
+        return promotor;
+    }
+
+    public void setPromotor(Promotor promotor) {
+        this.promotor = promotor;
+    }
+
+    public List<Voorstel> getVoorstellen() {
+        return voorstellen;
+    }
+
+    public void setVoorstellen(List<Voorstel> voorstellen) {
+        this.voorstellen = voorstellen;
+    }
+    
+}

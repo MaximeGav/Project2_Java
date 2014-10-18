@@ -1,0 +1,12 @@
+
+import domein.DomeinController;
+import domein.GebruikerRepository;
+import gui.StartJFrame;
+
+public class StartUpGui {
+
+    public static void main(String[] args) {
+        DomeinController dc = new DomeinController(new GebruikerRepository());
+        new StartJFrame(dc);
+    }
+}

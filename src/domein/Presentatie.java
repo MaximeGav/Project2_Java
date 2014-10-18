@@ -1,0 +1,144 @@
+package domein;
+
+import java.io.Serializable;
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
+@Entity
+public class Presentatie implements Serializable {
+
+    //Attributen
+    
+    @Id
+    @OneToOne
+    private Student student;
+   
+    @OneToOne
+    private Promotor jurylid;
+    
+    @ManyToMany
+    private List<Inschrijving> inschrijvingen;
+    
+    @OneToOne
+    private Promotor promotor;
+
+    @OneToMany
+    private List<Gast> gasten;
+    
+    @OneToOne 
+    private Campus campus;
+    
+    @OneToOne
+    private Lokaal lokaal;
+    
+    private int dag, tijdsvak;
+
+
+    public Presentatie() {
+    }
+
+    //Constructors
+   
+    public Presentatie(int dag, int tijdsvak, Lokaal lokaal, Campus campus, Student student) {
+        this.dag = dag;
+        this.tijdsvak = tijdsvak;
+        this.campus = campus;
+        this.lokaal = lokaal;
+        this.student = student;
+    }
+
+    //Methoden
+    
+    /**
+     * Voegt jurylid toe aan de presentatie.
+     * @param jurylid 
+     */
+    public void voegJuryLidToe(Promotor jurylid) throws IllegalArgumentException{
+       if(jurylid == null)
+       {
+           throw new IllegalArgumentException();
+       }
+       else
+        this.jurylid = jurylid;
+    }
+
+    //Getters & Setters
+    public int getDag() {
+        return dag;
+    }
+
+    public void setDag(int dag) {
+        this.dag = dag;
+    }
+
+    public int getTijdsvak() {
+        return tijdsvak;
+    }
+
+    public void setTijdsvak(int tijdsvak) {
+        this.tijdsvak = tijdsvak;
+    }
+
+    public Promotor getJurylid() {
+        return jurylid;
+    }
+
+    public void setJurylid(Promotor jurylid) {
+        this.jurylid = jurylid;
+    }
+
+    public Promotor getPromotor() {
+        return promotor;
+    }
+
+    public void setPromotor(Promotor promotor) {
+        this.promotor = promotor;
+    }
+    
+    public List<Gast> getGasten() {
+        return gasten;
+    }
+
+    public void setGasten(List<Gast> gasten) {
+        this.gasten = gasten;
+    }
+
+    public Campus getCampus() {
+        return campus;
+    }
+
+    public void setCampus(Campus campus) {
+        this.campus = campus;
+    }
+
+    public Lokaal getLokaal() {
+        return lokaal;
+    }
+
+    public void setLokaal(Lokaal lokaal) {
+        this.lokaal = lokaal;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public List<Inschrijving> getInschrijvingen() {
+        return inschrijvingen;
+    }
+
+    public void setInschrijvingen(List<Inschrijving> inschrijvingen) {
+        this.inschrijvingen = inschrijvingen;
+    }
+    
+    
+
+}

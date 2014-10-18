@@ -1,0 +1,82 @@
+package persistentie.dao;
+
+import domein.Gast;
+import domein.Inschrijving;
+import domein.Presentatie;
+import enums.DAO;
+import java.util.List;
+import persistentie.DAOFactory;
+import persistentie.GenericDao;
+
+/**
+ *
+ * @author RootSoft
+ * @param <T>
+ */
+public class InschrijvingDAO<T> extends GenericDao<Inschrijving>{
+    
+    //Attributes
+    
+    //Constructors
+    public InschrijvingDAO() {
+        super(Inschrijving.class);
+    }
+
+    //Callbacks
+    
+    @Override
+    public List<Inschrijving> findAll() {
+        return super.findAll();
+    }
+    
+    @Override
+    public void insert(Inschrijving i) {
+        super.insert(i);
+    }
+    
+    @Override
+    public void update(Inschrijving i) {
+        super.update(i);
+    }
+    
+    @Override
+    public Inschrijving get(int id) {
+        return (Inschrijving) super.get(id);
+    }
+    
+    public void schrijfGastIn(String gastEmail, String studentEmail) {
+        Gast gast = (Gast) DAOFactory.getDAO(DAO.GAST).get(gastEmail);
+        PresentatieDAO pDAO = (PresentatieDAO) DAOFactory.getDAO(DAO.PRESENTATIE);
+        Presentatie presentatie = pDAO.findPresentatieByStudentEmail(studentEmail);
+        Inschrijving inschrijving = new Inschrijving(0, presentatie, gast, false);
+        update(inschrijving);
+    }
+    
+    public Inschrijving findInschrijvingByStudentAndGast(String studentMail, String gastMail) {
+        //SELECT e FROM Inschrijving e JOIN Presentatie p JOIN Student s WHERE s.email = :email
+        return (Inschrijving) em.createQuery("SELECT e FROM " + type.getName() +
+                " e JOIN e.presentatie p JOIN p.student s JOIN e.gast g WHERE s.email = :studentMail AND g.email = :gastMail")
+                .setParameter("studentMail", studentMail).setParameter("gastMail", gastMail).getResultList().get(0);
+    }
+    
+    public List<Inschrijving> findInschrijvingenByPresentatieId(String studentMail) {
+        //SELECT e FROM Inschrijving e JOIN Presentatie p JOIN Student s WHERE s.email = :email
+        return em.createQuery("SELECT e FROM " + type.getName() + " e JOIN e.presentatie p JOIN p.student s WHERE s.email = :studentMail")
+                .setParameter("studentMail", studentMail).getResultList();
+    }
+    
+    public List<Inschrijving> findInschrijvingenByGast(String gastMail) {
+        //SELECT e FROM Inschrijving e JOIN Presentatie p JOIN Student s WHERE s.email = :email
+        return em.createQuery("SELECT e FROM " + type.getName() +
+                " e JOIN e.gast g WHERE g.email = :gastMail")
+                .setParameter("gastMail", gastMail).getResultList();
+    }
+    
+    public void inschrijvingGoedkeuren(String studentEmail, String gastEmail) {
+        Inschrijving inschrijving = findInschrijvingByStudentAndGast(studentEmail, gastEmail);
+        inschrijving.setIsGoedgekeurd(true);
+        update(inschrijving);
+    }
+    
+    
+}

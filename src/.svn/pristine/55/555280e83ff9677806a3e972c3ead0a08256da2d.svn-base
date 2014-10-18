@@ -1,0 +1,15 @@
+
+import domein.DomeinController;
+import gui.PlanningOpstellenJFrame;
+
+
+public class StartUpGUI {
+    
+    public static void main (String[] args) {
+        
+        DomeinController dc = new DomeinController();
+        
+        new PlanningOpstellenJFrame(dc);
+    }
+    
+}

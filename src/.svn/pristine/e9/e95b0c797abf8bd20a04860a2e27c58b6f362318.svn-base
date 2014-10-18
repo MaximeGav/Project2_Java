@@ -1,0 +1,127 @@
+
+package gui;
+
+import domein.DomeinController;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.WindowConstants;
+
+public class StartJFrame extends javax.swing.JFrame {
+    
+    private DomeinController dc;
+    private JLabel lblLogo;
+    private JButton btnStart;
+    private JButton btnPlanningOpstellen;
+    
+    private JButton btnTesting;
+
+    public StartJFrame(DomeinController dc) {
+        super();
+        this.dc = dc;
+        //initComponents(); Methode die niet manueel aangepast kan worden in de code, enkel drag and drop
+        initGUI(); //Eigen geschreven methode om een JFrame aan te maken
+    }
+    
+    private void initGUI() {
+        try {
+            this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("images/small_icon.png")).getImage());
+            getContentPane().setLayout(null);
+            setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            setVisible(true);
+            setResizable(true);
+            setTitle("Bachelorproefapplicatie HoGent");
+            {
+                lblLogo = new JLabel();
+                getContentPane().add(lblLogo);
+                lblLogo.setIcon(new ImageIcon(getClass().getClassLoader().getResource("images/hogent_logo.png")));
+                lblLogo.setBounds(125, 25, 200, 200);
+            }
+            {
+                btnStart = new JButton();
+                getContentPane().add(btnStart);
+                btnStart.setText("Promotor toekennen.");
+                btnStart.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        dispose();
+                        new GebruikersSelecterenJFrame(dc);
+                    }
+                });
+                btnStart.setBounds(100, 250, 180, 25);
+            }
+            {
+                btnPlanningOpstellen = new JButton();
+                getContentPane().add(btnPlanningOpstellen);
+                btnPlanningOpstellen.setText("Planning opstellen.");
+                btnPlanningOpstellen.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        dispose();
+                        new PlanningOpstellenJFrame(dc);
+                    }
+                });
+                btnPlanningOpstellen.setBounds(100, 280, 180, 25);
+            }
+            {
+                btnStart = new JButton();
+                getContentPane().add(btnStart);
+                btnStart.setText("Testing.");
+                btnStart.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        dc.startEditingPlanning();
+                        List<Integer> lijst = dc.geefGeplandePresentaties();
+                    }
+                });
+                btnStart.setBounds(100, 310, 180, 25);
+            }
+            
+            pack();
+            setSize(400, 400);
+
+            // Get the size of the screen
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+            // Determine the new location of the window
+            int w = getSize().width;
+            int h = getSize().height;
+            int x = (dim.width-w)/2;
+            int y = (dim.height-h)/2;
+
+            // Move the window
+            setLocation(x, y);
+        } catch (Exception e) {
+            //add your error handling code here
+            e.printStackTrace();
+        }
+    }
+    
+    /*
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+
+    */
+}

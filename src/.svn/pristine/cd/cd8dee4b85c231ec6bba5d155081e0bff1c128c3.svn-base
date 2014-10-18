@@ -1,0 +1,193 @@
+package domein;
+
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import persistentie.PersistentieController;
+
+@Entity
+public class Presentatie {
+
+    //Attributen
+    
+    @Id
+    @OneToOne(fetch = FetchType.LAZY)
+    private Student student;
+   
+    
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Promotor> juryleden;
+    
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Promotor> promotoren;
+    //private int id;
+    private final PersistentieController pc;
+    
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<Gast> gasten;
+    
+    @OneToOne (fetch = FetchType.LAZY)
+    private Campus campus;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    private Lokaal lokaal;
+    
+    
+    
+    private int dag, tijdsvak;
+    //private int lokaalId;
+    //private int campusId;
+    //private int studentId;
+
+    //Constructors
+    /*public Presentatie(int dag, int tijdsvak, int lokaalId, int campusId, int studentId) {
+     pc = PersistentieController.getInstance();
+     promotoren = pc.geefPromotoren();
+     juryleden = new ArrayList<>();
+     this.dag = dag;
+     this.tijdsvak = tijdsvak;
+     this.lokaalId = lokaalId;
+     this.campusId = campusId;
+     this.studentId = studentId;
+     }
+     public Presentatie(int id, int dag, int tijdsvak, int lokaalId, int campusId, int studentId) {
+     pc = PersistentieController.getInstance();
+     promotoren = pc.geefPromotoren();
+     juryleden = new ArrayList<>();
+     this.id = id;
+     this.dag = dag;
+     this.tijdsvak = tijdsvak;
+     this.lokaalId = lokaalId;
+     this.campusId = campusId;
+     this.studentId = studentId;
+     }*/
+    public Presentatie(int dag, int tijdsvak, Lokaal lokaal, Campus campus, Student student) {
+        pc = PersistentieController.getInstance();
+        this.dag = dag;
+        this.tijdsvak = tijdsvak;
+        this.campus = campus;
+        this.lokaal = lokaal;
+        this.student = student;
+    }
+
+    //Methoden
+    public void voegJuryLedenToe(Promotor promotor) {
+        juryleden.add(promotoren.get(promotorId - 1));
+    }
+
+    //Getters & Setters
+    public int getDag() {
+        return dag;
+    }
+
+    public void setDag(int dag) {
+        this.dag = dag;
+    }
+
+    public int getTijdsvak() {
+        return tijdsvak;
+    }
+
+    public void setTijdsvak(int tijdsvak) {
+        this.tijdsvak = tijdsvak;
+    }
+
+    /*public int getLokaalId() {
+     return lokaalId;
+     }
+
+     public void setLokaalId(int lokaalId) {
+     this.lokaalId = lokaalId;
+     }
+    
+     public int getCampusId() {
+     return campusId;
+     }
+    
+     public void setCampusId(int campusId) {
+     this.campusId = campusId;
+     }
+    
+     public int getStudentID() {
+     return studentId;
+     }
+    
+     public void setStudentID(int studentID) {
+     this.studentId = studentID;
+     }*/
+    public List<Promotor> getJuryLeden() {
+        return juryleden;
+    }
+
+    public void setJuryLeden(List<Promotor> juryLeden) {
+        this.juryleden = juryLeden;
+    }
+
+    public List<Promotor> getPromotoren() {
+        return promotoren;
+    }
+
+    public void setPromotoren(List<Promotor> promotoren) {
+        this.promotoren = promotoren;
+    }
+
+    /*
+     public int getId() {
+     return id;
+     }
+     public void setId(int id) {
+     this.id = id;
+     }*/
+    public List<Promotor> getJuryleden() {
+        return juryleden;
+    }
+
+    public void setJuryleden(List<Promotor> juryleden) {
+        this.juryleden = juryleden;
+    }
+
+    public List<Gast> getGasten() {
+        return gasten;
+    }
+
+    public void setGasten(List<Gast> gasten) {
+        this.gasten = gasten;
+    }
+
+    public Campus getCampus() {
+        return campus;
+    }
+
+    public void setCampus(Campus campus) {
+        this.campus = campus;
+    }
+
+    public Lokaal getLokaal() {
+        return lokaal;
+    }
+
+    public void setLokaal(Lokaal lokaal) {
+        this.lokaal = lokaal;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public Long getPresentatieId() {
+        return presentatieId;
+    }
+
+    public void setPresentatieId(Long presentatieId) {
+        this.presentatieId = presentatieId;
+    }
+}

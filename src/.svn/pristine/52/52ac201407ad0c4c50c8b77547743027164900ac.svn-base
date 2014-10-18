@@ -1,0 +1,33 @@
+package domein;
+
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
+@Entity
+@DiscriminatorValue("Gast")
+public class Gast extends Gebruiker {
+    
+    
+    //Attributen
+    
+    //Constructors
+    public Gast(String voornaam, String famnaam, String email, String wachtwoord) {
+        super(voornaam, famnaam, email, wachtwoord);
+    }
+    
+    /*
+    public Gast(int id, String voornaam, String famnaam, String email) {
+        super(id, voornaam, famnaam, email, "wachtwoord");
+    }*/
+    
+    public Gast(String voornaam, String famnaam, String email) {
+        super(voornaam, famnaam, email, "nopass");
+    }
+    
+    //Methodes
+    
+    
+    //Getters & Setters
+    
+    
+}

@@ -1,0 +1,120 @@
+
+package gui;
+
+import domein.DomeinController;
+import domein.Promotor;
+import domein.Student;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.WindowConstants;
+
+public class StudentenLoskoppelenJFrame2 extends javax.swing.JFrame {
+    
+    private DomeinController dc;
+    private JLabel lblTekst;
+    private JButton btnLoskoppelen;
+    private DefaultListModel modelStudenten;
+    private JList lijstStudenten;
+    private List<Student> geselecteerdeStudenten;
+    private Promotor geselecteerdePromotor;
+
+    public StudentenLoskoppelenJFrame2(DomeinController dc, Promotor geselecteerdePromotor) {
+        super();
+        this.dc = dc;
+        this.modelStudenten = new DefaultListModel();
+        this.lijstStudenten = new JList(modelStudenten);
+        this.geselecteerdePromotor = geselecteerdePromotor;
+        //initComponents(); Methode die niet manueel aangepast kan worden in de code, enkel drag and drop
+        initGUI(); //Eigen geschreven methode om een JFrame aan te maken
+    }
+
+    private void initGUI() {
+        try {
+            this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("images/small_icon.png")).getImage());
+            getContentPane().setLayout(null);
+            setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            setVisible(true);
+            setResizable(true);
+            setTitle("Bachelorproefapplicatie HoGent");
+            {
+                JTextArea textArea = new JTextArea("Promotor " + geselecteerdePromotor.getVoornaam() + " " +
+                        geselecteerdePromotor.getFamnaam() + " heeft volgende studenten:");
+                textArea.setBounds(25,25,325,25);
+                textArea.setEditable(false);
+                textArea.setLineWrap(true);
+                textArea.setOpaque(false);
+                textArea.setBorder(BorderFactory.createEmptyBorder());
+                getContentPane().add(textArea);
+            }
+            {
+                JScrollPane pane = new JScrollPane(lijstStudenten);
+                pane.setBounds(25, 50, 300, 100);
+                getContentPane().add(pane);
+            }
+            for (Student s : geselecteerdePromotor.getStudenten()) {
+                modelStudenten.addElement(s);
+            }
+            {
+                btnLoskoppelen = new JButton("Loskoppelen");
+                btnLoskoppelen.setBounds(25, 160, 125, 25);
+                getContentPane().add(btnLoskoppelen);
+                btnLoskoppelen.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        //doe iets
+                    }
+                });
+            }
+
+            pack();
+            setSize(375, 250);
+
+            // Get the size of the screen
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+            // Determine the new location of the window
+            int w = getSize().width;
+            int h = getSize().height;
+            int x = (dim.width-w)/2;
+            int y = (dim.height-h)/2;
+
+            // Move the window
+            setLocation(x, y);
+        } catch (Exception e) {
+            //add your error handling code here
+            e.printStackTrace();
+        }
+
+    }
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}

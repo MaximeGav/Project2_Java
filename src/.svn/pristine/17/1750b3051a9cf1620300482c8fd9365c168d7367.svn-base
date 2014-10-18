@@ -1,0 +1,87 @@
+package domein;
+
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name ="lokalen")
+public class Lokaal {
+
+    //Attributen
+    //private int id;
+    
+    @Id
+    private String naam;
+    private int maxAantalPlaatsen;
+    //private int campusId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Campus campus;
+    
+    //Constructors
+    /*public Lokaal(String naam, int campusId) {
+    this.naam = naam;
+    this.campusId = campusId;
+    }*/
+    /*public Lokaal(int id, String naam, int campusId, int maxAantalPlaatsen) {
+    this.id = id;
+    this.naam = naam;
+    this.campusId = campusId;
+    this.maxAantalPlaatsen = maxAantalPlaatsen;
+    }*/
+    public Lokaal(String naam, int maxAantalPlaatsen, Campus campus) {
+        this.naam = naam;
+        this.maxAantalPlaatsen = maxAantalPlaatsen;
+        this.campus = campus;
+    }
+    
+
+    //Methodes
+    public String toString() {
+        return this.naam;
+    }
+    
+    //Getters & Setters
+    /*public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }*/
+    
+    public String getNaam() {
+        return naam;
+    }
+
+    public void setNaam(String naam) {
+        this.naam = naam;
+    }
+
+    public int getMaxAantalPlaatsen() {
+        return maxAantalPlaatsen;
+    }
+
+    public void setMaxAantalPlaatsen(int maxAantalPlaatsen) {
+        this.maxAantalPlaatsen = maxAantalPlaatsen;
+    }
+
+    /*public int getCampusId() {
+    return campusId;
+    }
+    public void setCampusId(int campusId) {
+    this.campusId = campusId;
+    }*/
+    
+    public Campus getCampus() {
+        return campus;
+    }
+
+    public void setCampus(Campus campus) {
+        this.campus = campus;
+    } 
+
+}

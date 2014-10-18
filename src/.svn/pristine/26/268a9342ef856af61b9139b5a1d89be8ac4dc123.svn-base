@@ -1,0 +1,780 @@
+package gui;
+
+import domein.*;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingConstants;
+import javax.swing.table.TableModel;
+import resources.PopUpMenu;
+
+public class PlanningOpstellenJFrame extends javax.swing.JFrame {
+
+    private final DomeinController dc;
+    private Map<String, Integer> weken = new HashMap<>();
+    private Map<Integer, String> promotoren;
+    //private int huidigeWeek; //huidigeWeek slaat hier op de Huidige GETOONDE week
+    private List<Calendar> dagenWeek;
+    public static final int BEGINTIJD = 8;
+    public static final int AANTAL_TIJDSLOTS = 18;
+    private Promotor geselecteerdePromotor;
+    private Campus geselecteerdeCampus;
+    private Lokaal geselecteerdLokaal;
+    private Presentatie geselecteerdePresentatie;
+    private CustomRenderer renderer;
+
+    public PlanningOpstellenJFrame(final DomeinController dc) {
+        super();
+        setVisible(true);
+        this.dc = dc;
+        //initComponents();
+        initGUI();
+        tblWeek.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Zodat maar 1 cel aangeklikt kan worden
+        tblWeek.getTableHeader().setReorderingAllowed(false);
+        renderer = new CustomRenderer();
+        tblWeek.setDefaultRenderer(Object.class, renderer);
+
+        dc.startEditingPlanning(); //maakt een nieuwe planning aan indien nog niet aangemaakt
+        setLokaalCombobox(cmbLokaal, 1);
+        setCampusCombobox(cmbCampus);
+        setPromotorenCombobox(cmbPromotoren);
+        tabelheadingInstellen();
+        this.pack();
+
+        // Get the size of the screen
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+        // Determine the new location of the window
+        int w = getSize().width;
+        int h = getSize().height;
+        int x = (dim.width - w) / 2;
+        int y = (dim.height - h) / 2;
+
+        // Move the window
+        setLocation(x, y);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                new StartJFrame(dc);
+            }
+        });
+
+        tblWeek.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    Point p = e.getPoint();
+
+                    // get the row index that contains that coordinate
+                    int rowNumber = tblWeek.rowAtPoint(p);
+                    int colNumber = tblWeek.columnAtPoint(p);
+
+                    // Get the ListSelectionModel of the JTable
+                    ListSelectionModel model = tblWeek.getSelectionModel();
+                    tblWeek.changeSelection(rowNumber, colNumber, false, false);
+
+                    PopUpMenu menu = new PopUpMenu(menuListener);
+                    menu.show(e.getComponent(), e.getX(), e.getY());
+
+                }
+            }
+        });
+    }
+
+    ActionListener menuListener = new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+            switch (evt.getActionCommand()) {
+                case "Plannen":
+                    planPresentatie(evt);
+                    break;
+                case "Bewerken":
+                    bewerkPresentatie(evt);
+                    break;
+                case "Juryleden toevoegen":
+                    kenJurylidToe(evt);
+                    break;
+                case "Bezoekers toevoegen":
+                    bezoekersToevoegen(evt);
+                    break;
+                case "Ongeplande studenten":
+                    toonOngeplandeStudenten();
+                    break;
+            }
+        }
+
+    };
+
+    private void toonOngeplandeStudenten() {
+        for (String naam : dc.geefLijstOngeplandeStudentenVanPromotor(renderer.getPromotorId()).keySet()) {
+            System.out.println(naam);
+        }
+    }
+
+    private void bezoekersToevoegen(ActionEvent evt) {
+        btnBezoekersToevoegenActionPerformed(evt);
+    }
+
+    private void bewerkPresentatie(ActionEvent evt) {
+        int dag = tblWeek.getSelectedColumn();
+        int tijdsvak = tblWeek.getSelectedRow();
+
+        if (dc.geefPresentatie(dag, tijdsvak) != null) {
+            geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);
+            btnPlanningBewerkenActionPerformed(evt);
+        } else {
+            JOptionPane.showMessageDialog(null, "Gelieve een geldige tijdsvak te kiezen.");
+        }
+    }
+
+    private void planPresentatie(ActionEvent evt) {
+        /**
+         * geselecteerdePromotor = (String) cmbPromotoren.getSelectedItem();
+         * geselecteerdLokaal = (String) cmbLokaal.getSelectedItem();
+         * geselecteerdeCampus = (String) cmbCampus.getSelectedItem();
+         *
+         */
+        btnPlanPresentatieActionPerformed(evt);
+    }
+
+    private void kenJurylidToe(ActionEvent evt) {
+        int dag = tblWeek.getSelectedColumn();
+        int tijdsvak = tblWeek.getSelectedRow();
+
+        if (dc.geefPresentatie(dag, tijdsvak) != null) {
+            geselecteerdePresentatie = dc.geefPresentatie(tblWeek.getSelectedColumn(), tblWeek.getSelectedRow());
+            btnKenJuryLidToeActionPerformed(evt);
+        } else {
+            JOptionPane.showMessageDialog(null, "Gelieve een geldige tijdsvak te kiezen.");
+        }
+    }
+
+    /**
+     * Instellen van de combobox waaruit een gebruiker een promotor kan kiezen
+     *
+     * @param comboBox
+     */
+    private void setPromotorenCombobox(JComboBox comboBox) {
+        comboBox.removeAllItems();
+
+        promotoren = dc.geefPromotoren();
+        for (Map.Entry<Integer, String> promotor : promotoren.entrySet()) {
+            comboBox.addItem(promotor.getValue());
+        }
+    }
+
+    /**
+     * Instellen van de combobox waaruit een gebruiker een campus kan kiezen
+     *
+     * @param comboBox
+     */
+    private void setCampusCombobox(JComboBox comboBox) {
+        comboBox.removeAllItems();
+        for (Campus c : dc.geefCampussen()) {
+            comboBox.addItem(c);
+        }
+    }
+
+    /**
+     * Instellen van de combobox waaruit een gebruiker een lokaal kan kiezen
+     *
+     * @param comboBox
+     */
+    private void setLokaalCombobox(JComboBox comboBox, int campusId) {
+        comboBox.removeAllItems();
+        for (Lokaal l : dc.findLokalenByCampusId(campusId)) {
+            comboBox.addItem(l);
+        }
+    }
+
+    /**
+     * Stelt de heading van de tabel in, zowel horizontaal als verticaal
+     */
+    private void tabelheadingInstellen() {
+
+        //empty the list to set a new one
+        if (dagenWeek == null) {
+            dagenWeek = new ArrayList<Calendar>();
+        }
+        dagenWeek.clear();
+
+        tblWeek.getColumnModel().getColumn(1).setHeaderValue("Maandag");
+        tblWeek.getColumnModel().getColumn(2).setHeaderValue("Dinsdag");
+        tblWeek.getColumnModel().getColumn(3).setHeaderValue("Woensdag");
+        tblWeek.getColumnModel().getColumn(4).setHeaderValue("Donderdag");
+        tblWeek.getColumnModel().getColumn(5).setHeaderValue("Vrijdag");
+
+        tblWeek.getTableHeader().repaint();
+
+        zetTijdsloten(tblWeek);
+        zetGeplandePresentaties();
+    }
+
+    /**
+     * Methode die de begin- en eindtijd berekend
+     *
+     * @param jtable
+     */
+    private void zetTijdsloten(JTable jtable) {
+        TableModel tbl = jtable.getModel();
+        //JOptionPane.showMessageDialog(null, tbl.getRowCount());
+        int currentHour = BEGINTIJD;
+        boolean halfHour = false;
+        for (int i = 0; i < AANTAL_TIJDSLOTS; i++) {
+            String time, endTime;
+            time = (halfHour ? currentHour : currentHour--) + "u" + (halfHour ? "30" : "00");
+            endTime = String.valueOf(halfHour ? currentHour + 1 : currentHour + 1) + "u" + String.valueOf(halfHour ? "00" : "30");
+            tbl.setValueAt(time + "-" + endTime, i, 0);
+            currentHour++;
+            halfHour = !halfHour;
+        }
+    }
+
+    private void clearCalendar() {
+        //tblWeek.getModel().setValueAt(dc.findStudentById(studentId).toString(), tijdsvak, dag)
+
+        for (int i = 1; i < tblWeek.getColumnCount(); i++) {
+            for (int x = 0; x < tblWeek.getRowCount(); x++) {
+                tblWeek.getModel().setValueAt("", x, i);
+            }
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tblWeek = new javax.swing.JTable();
+        cmbLokaal = new javax.swing.JComboBox();
+        lblLokaal = new javax.swing.JLabel();
+        cmbPromotoren = new javax.swing.JComboBox();
+        lblPromotor = new javax.swing.JLabel();
+        cmbCampus = new javax.swing.JComboBox();
+        lblCampus = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
+        tblWeek.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
+            }
+        ));
+        tblWeek.setRowSelectionAllowed(false);
+        jScrollPane1.setViewportView(tblWeek);
+
+        cmbLokaal.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbLokaal.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmbLokaalItemStateChanged(evt);
+            }
+        });
+        cmbLokaal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbLokaalActionPerformed(evt);
+            }
+        });
+
+        lblLokaal.setText("Kies lokaal:");
+
+        cmbPromotoren.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbPromotoren.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbPromotorenActionPerformed(evt);
+            }
+        });
+
+        lblPromotor.setText("Selecteer promotor:");
+
+        cmbCampus.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbCampus.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmbCampusItemStateChanged(evt);
+            }
+        });
+        cmbCampus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbCampusActionPerformed(evt);
+            }
+        });
+
+        lblCampus.setText("Kies campus:");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblPromotor)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmbPromotoren, javax.swing.GroupLayout.PREFERRED_SIZE, 263, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(388, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(lblCampus)
+                                .addGap(18, 18, 18)
+                                .addComponent(cmbCampus, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(30, 30, 30)
+                                .addComponent(lblLokaal)
+                                .addGap(18, 18, 18)
+                                .addComponent(cmbLokaal, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 31, Short.MAX_VALUE))))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cmbLokaal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblLokaal)
+                    .addComponent(cmbCampus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblCampus))
+                .addGap(26, 26, 26)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 310, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(26, 26, 26)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblPromotor)
+                    .addComponent(cmbPromotoren, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(20, Short.MAX_VALUE))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void initGUI() {
+
+        this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("images/small_icon.png")).getImage());
+        getContentPane().setLayout(null);
+        //setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setVisible(true);
+        setResizable(true);
+        setTitle("Bachelorproefapplicatie HoGent");
+
+        jScrollPane1 = new JScrollPane();
+        tblWeek = new JTable();
+        cmbLokaal = new JComboBox();
+        lblLokaal = new JLabel();
+        cmbPromotoren = new JComboBox();
+        lblPromotor = new JLabel();
+        cmbCampus = new JComboBox();
+        lblCampus = new JLabel();
+
+        jScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
+        {
+            JSeparator x = new JSeparator(SwingConstants.HORIZONTAL);
+            //x.setPreferredSize(new Dimension(3,3));
+            x.setBounds(25, 50, 715, 5);
+            getContentPane().add(x);
+        }
+        {
+            JSeparator y = new JSeparator(SwingConstants.HORIZONTAL);
+            //x.setPreferredSize(new Dimension(3,3));
+            y.setBounds(25, 385, 715, 5);
+            getContentPane().add(y);
+        }
+
+        tblWeek.setModel(new javax.swing.table.DefaultTableModel(
+                new Object[][]{
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null},
+                    {null, null, null, null, null, null}
+                },
+                new String[]{
+                    "", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6"
+                }
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                //all cells false
+                return false;
+            }
+        });
+        //tblWeek.setSize(200, 200);
+        tblWeek.setCellSelectionEnabled(true);
+        jScrollPane1.setViewportView(tblWeek);
+
+        /*cmbLokaal.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+         cmbLokaal.addItemListener(new java.awt.event.ItemListener() {
+         public void itemStateChanged(java.awt.event.ItemEvent evt) {
+         cmbLokaalItemStateChanged(evt);
+         }
+         });*/
+        cmbLokaal.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+        cmbLokaal.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmbLokaalItemStateChanged(evt);
+            }
+        });
+        cmbLokaal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbLokaalActionPerformed(evt);
+            }
+        });
+
+        lblLokaal.setText("Kies lokaal:");
+
+        cmbPromotoren.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+
+        /*cmbPromotoren.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+         cmbPromotorenActionPerformed(evt);
+         }
+         });*/
+        cmbPromotoren.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                if (evt.getStateChange() == ItemEvent.SELECTED) {
+                    cmbPromotorenItemStateChanged(evt);
+                }
+
+            }
+        });
+
+        lblPromotor.setText("Selecteer promotor:");
+
+        /*btnPlanPresentatie.setText("Plan Presentatie");
+         btnPlanPresentatie.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+
+         //geselecteerdePromotor = (Promotor) cmbPromotoren.getSelectedItem();
+         btnPlanPresentatieActionPerformed(evt);
+         }
+
+         });
+
+         btnKenJuryLidToe.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+         int dag = tblWeek.getSelectedColumn();
+         int tijdsvak = tblWeek.getSelectedRow();
+
+         if (dc.geefPresentatie(dag, tijdsvak) != null) {
+         geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);
+         btnKenJuryLidToeActionPerformed(evt);
+         } else {
+         JOptionPane.showMessageDialog(null, "Gelieve een geldige tijdsvak te kiezen.");
+         }
+         }
+
+         });
+         btnBezoekersToevoegen.setText("Planning bewerken");
+        
+         btnPlanningBewerken.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+         int dag = tblWeek.getSelectedColumn();
+         int tijdsvak = tblWeek.getSelectedRow();
+
+         if (dc.geefPresentatie(dag, tijdsvak) != null) {
+         geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);
+         btnPlanningBewerkenActionPerformed(evt);
+         } else {
+         JOptionPane.showMessageDialog(null, "Gelieve een geldige tijdsvak te kiezen.");
+         }
+         }
+
+         });*/
+        cmbCampus.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+
+        cmbCampus.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                if (evt.getStateChange() == ItemEvent.SELECTED) {
+                    cmbCampusItemStateChanged(evt);
+                }
+            }
+        });
+
+        /*cmbCampus.addActionListener(new ActionListener() {
+         @Override
+         public void actionPerformed(ActionEvent evt) {
+         cmbCampusItemStateChanged(evt);
+         }
+         });*/
+        lblCampus.setText("Kies campus:");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                        .addGap(24, 24, 24)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(layout.createSequentialGroup()
+                                        .addComponent(lblCampus)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(cmbCampus, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(30, 30, 30)
+                                        .addComponent(lblLokaal)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(cmbLokaal, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 720, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(0, 31, Short.MAX_VALUE))
+                                .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addGroup(layout.createSequentialGroup()
+                                                        .addComponent(lblPromotor)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(cmbPromotoren, javax.swing.GroupLayout.PREFERRED_SIZE, 263, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGroup(layout.createSequentialGroup()))
+                                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(cmbLokaal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblLokaal)
+                                .addComponent(cmbCampus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblCampus))
+                        .addGap(26, 26, 26)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 310, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(26, 26, 26)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(lblPromotor)
+                                .addComponent(cmbPromotoren, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        pack();
+    }// </editor-fold>
+
+
+    private void cmbLokaalItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbLokaalItemStateChanged
+        if (evt.getStateChange() == ItemEvent.SELECTED) {
+            clearCalendar();
+            tabelheadingInstellen();
+
+        }
+    }//GEN-LAST:event_cmbLokaalItemStateChanged
+
+    private void btnKenJuryLidToeActionPerformed(java.awt.event.ActionEvent evt) {
+        if (tblWeek.getSelectedColumnCount() > 0) {
+            //Nieuw jFrame komen
+            int dag = tblWeek.getSelectedColumn();
+            int tijdsvak = tblWeek.getSelectedRow();
+
+            geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);
+
+            dispose();
+            new JuryledenToekennenJDialog(dc, geselecteerdePresentatie).setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Gelieve een geldige tijdsvak te kiezen.");
+        }
+
+    }
+
+    private void btnPlanningBewerkenActionPerformed(java.awt.event.ActionEvent evt) {
+        if (tblWeek.getSelectedColumnCount() > 0) {
+            //Nieuw jFrame komen
+            /*int dag = tblWeek.getSelectedColumn();
+            int tijdsvak = tblWeek.getSelectedRow();
+
+            geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);*/
+
+            dispose();
+            new PlanningBewerkenJDialog(dc, geselecteerdePresentatie);
+        } else {
+            JOptionPane.showMessageDialog(this, "Gelieve een geldige tijdsvak te kiezen.");
+        }
+
+    }
+
+    private void cmbPromotorenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbPromotorenActionPerformed
+
+    }//GEN-LAST:event_cmbPromotorenActionPerformed
+
+    private void cmbPromotorenItemStateChanged(java.awt.event.ItemEvent evt) {
+        for (Promotor p : dc.geefLijstPromotoren()) {
+            if ((p.getVoornaam() + " " + p.getFamnaam()).equals(evt.getItem())) {
+                renderer.setPromotorId(p.getId()); //id meegeven van promotir
+                this.repaint();
+            }
+        }
+    }
+    /*
+    private void btnBezoekersToevoegenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBezoekersToevoegenActionPerformed
+        if (tblWeek.getSelectedColumn() > 0) {
+     int dag = tblWeek.getSelectedColumn();
+     int tijdsvak = tblWeek.getSelectedRow();
+
+     geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);
+     dispose();
+     new BezoekersToevoegenJFrame(dc, geselecteerdePresentatie);
+     } else {
+     JOptionPane.showMessageDialog(this, "Gelieve een geldige tijdsvak te kiezen.");
+     }
+        
+    }//GEN-LAST:event_btnBezoekersToevoegenActionPerformed
+*/
+    private void cmbCampusItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbCampusItemStateChanged
+        geselecteerdeCampus = (Campus) evt.getItem();
+        if (geselecteerdeCampus != null) {
+            int id = geselecteerdeCampus.getId();
+            setLokaalCombobox(cmbLokaal, id);
+        }
+    }//GEN-LAST:event_cmbCampusItemStateChanged
+
+    private void cmbCampusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCampusActionPerformed
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_cmbCampusActionPerformed
+
+    private void cmbLokaalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbLokaalActionPerformed
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_cmbLokaalActionPerformed
+
+    /**
+     * Methode die de presentaties die al in de database zitten, toont op de
+     * kalender
+     *
+     * @param table
+     * @param geplandePresentaties lijst van reeds geplande presentaties
+     */
+    private void zetGeplandePresentaties() {
+        /*List<Integer> geplandePresentaties = dc.geefGeplandePresentaties(cmbCampus.getSelectedItem().toString(), cmbLokaal.getSelectedItem().toString());
+         ListIterator li = geplandePresentaties.listIterator();
+         while (li.hasNext()) { //zolang er nog presentaties in de lijst zijn
+         int dag = (int) li.next();
+         int tijdsvak = (int) li.next();
+         int studentId = dc.geefPresentatie(dag, tijdsvak).getStudentID();
+         tblWeek.getModel().setValueAt(dc.findStudentById(studentId).toString(), tijdsvak, dag);
+         }*/
+        geselecteerdLokaal = (Lokaal) cmbLokaal.getSelectedItem();
+        List<Presentatie> presentaties = dc.findPresentatiesByLokaalId(geselecteerdLokaal.getId());
+        for (Presentatie p : presentaties) {
+            int dag = p.getDag();
+            int tijdsvak = p.getTijdsvak();
+            int studentId = p.getStudentID();
+            tblWeek.getModel().setValueAt(dc.findStudentById(studentId), tijdsvak, dag);
+        }
+
+    }
+
+    private void btnBezoekersToevoegenActionPerformed(java.awt.event.ActionEvent evt) {
+        int dag = tblWeek.getSelectedColumn();
+        int tijdsvak = tblWeek.getSelectedRow();
+
+        geselecteerdePresentatie = dc.geefPresentatie(dag, tijdsvak);
+        dispose();
+        new BezoekersToevoegenJFrame(dc, geselecteerdePresentatie);
+    }
+
+    private void btnPlanPresentatieActionPerformed(java.awt.event.ActionEvent evt) {
+        int dag = tblWeek.getSelectedColumn();
+        int tijdsvak = tblWeek.getSelectedRow();
+
+        if (tblWeek.getSelectedColumn() > 0 && dc.geefPresentatie(dag, tijdsvak) == null) {
+
+            for (Promotor p : dc.geefLijstPromotoren()) {
+                if (cmbPromotoren.getSelectedItem().equals(p.getVoornaam() + " " + p.getFamnaam())) {
+                    geselecteerdePromotor = p;
+                }
+            }
+            geselecteerdLokaal = (Lokaal) cmbLokaal.getSelectedItem();
+            geselecteerdeCampus = (Campus) cmbCampus.getSelectedItem();
+
+            this.dispose();
+            new PlanPresentatieJDialog(dc, geselecteerdePromotor.getId(), geselecteerdeCampus.getId(), geselecteerdLokaal.getId(), dag, tijdsvak);
+
+            clearCalendar();
+            tabelheadingInstellen();
+        } else {
+            JOptionPane.showMessageDialog(this, "Gelieve een geldige tijdsvak te kiezen.");
+        }
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox cmbCampus;
+    private javax.swing.JComboBox cmbLokaal;
+    private javax.swing.JComboBox cmbPromotoren;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblCampus;
+    private javax.swing.JLabel lblLokaal;
+    private javax.swing.JLabel lblPromotor;
+    private javax.swing.JTable tblWeek;
+    // End of variables declaration//GEN-END:variables
+
+}

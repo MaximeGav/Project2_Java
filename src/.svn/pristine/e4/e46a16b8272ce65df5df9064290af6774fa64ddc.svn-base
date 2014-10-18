@@ -1,0 +1,156 @@
+package domein;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Temporal;
+import persistentie.DAOFactory;
+import enums.DAO;
+import persistentie.dao.LokaalDAO;
+
+@Entity
+public class Planning implements Serializable {
+    
+    @Id
+    private int planningID;
+    
+
+    @OneToMany
+    private List<Campus> campussen;
+    
+    @OneToMany
+    private List<Promotor> promotoren;
+    
+    @OneToMany
+    private List<Presentatie> presentaties;
+    
+    private Boolean isZichtbaar = false;
+    
+    @Temporal(javax.persistence.TemporalType.DATE)
+    private Calendar zichtbaarTot;
+    
+    
+    
+    public Planning() {
+        DAOFactory.initFactory();
+        presentaties = DAOFactory.getDAO(DAO.PRESENTATIE).findAll();
+        promotoren = DAOFactory.getDAO(DAO.PROMOTOR).findAll();
+        campussen = DAOFactory.getDAO(DAO.CAMPUS).findAll();
+       
+        System.out.println("Planning loaded.");
+    }
+
+    public void maakPlanningZichtbaar(Calendar eindDatum) {
+        setIsZichtbaar(true);
+        this.zichtbaarTot = eindDatum;
+    }
+
+    public void addPresentatie(Presentatie presentatie) {
+        presentaties.add(presentatie);
+    }
+
+    public List<Beschikbaarheid> geefBeschikbaarheden(Promotor promotor) {
+        return promotor.getBeschikbaarheden();
+    }
+
+    public List<Presentatie> geefPresentaties() {
+        List<Presentatie> Presentaties = new ArrayList<>();
+        for (Presentatie p : presentaties) {
+            Presentaties.add(p);
+        }
+        return Presentaties;
+    }
+
+    public List<Presentatie> geefGeplandePresentaties(Campus campus, Lokaal lokaal) {
+        List<Presentatie> geplandePresentaties = new ArrayList<>();
+        for (Presentatie p : presentaties) {
+            if (p.getCampus().equals(campus) && p.getLokaal().equals(lokaal)) {
+                geplandePresentaties.add(p);
+            }
+        }
+        return geplandePresentaties;
+    }
+
+    public List<Lokaal> geefLokalen(Campus campus) {
+        return campus.getLokalen();
+    }
+
+    public Presentatie geefPresentatie(int dag, int tijdsvak, Campus campus, Lokaal lokaal) {
+        Presentatie presentatie = null;
+
+        for (Presentatie p : presentaties) {
+            if (p.getDag() == dag && p.getTijdsvak() == tijdsvak && p.getCampus().equals(campus) && p.getLokaal().equals(lokaal)) {
+                presentatie = p;
+            }
+        }
+        return presentatie;
+    }
+
+    /**
+     * @return the isZichtbaar
+     */
+    public Boolean getIsZichtbaar() {
+        return isZichtbaar;
+    }
+
+    /**
+     * @param isZichtbaar the isZichtbaar to set
+     */
+    public void setIsZichtbaar(Boolean isZichtbaar) {
+        this.isZichtbaar = isZichtbaar;
+    }
+
+    /**
+     * @param presentaties the presentaties to set
+     */
+    public void setPresentaties(List<Presentatie> presentaties) {
+        this.presentaties = presentaties;
+    }
+
+    public List<Campus> geefCampussen() {
+        return this.campussen;
+    }
+
+    public List<Lokaal> findLokalenByCampusId(String campusNaam) {
+        LokaalDAO lokaalDAO = (LokaalDAO) DAOFactory.getDAO(DAO.LOKAAL);
+        return lokaalDAO.findLokalenByCampusId(campusNaam);
+    }
+
+    public List<Campus> getCampussen() {
+        return campussen;
+    }
+
+    public void setCampussen(List<Campus> campussen) {
+        this.campussen = campussen;
+    }
+
+    public List<Promotor> getPromotoren() {
+        return promotoren;
+    }
+
+    public void setPromotoren(List<Promotor> promotoren) {
+        this.promotoren = promotoren;
+    }
+
+    public Calendar getZichtbaarTot() {
+        return zichtbaarTot;
+    }
+
+    public void setZichtbaarTot(Calendar zichtbaarTot) {
+        this.zichtbaarTot = zichtbaarTot;
+    }
+
+    public int getPlanningID() {
+        return planningID;
+    }
+
+    public void setPlanningID(int planningID) {
+        this.planningID = planningID;
+    }
+
+    
+}

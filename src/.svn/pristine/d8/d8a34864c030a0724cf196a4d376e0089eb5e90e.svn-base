@@ -1,0 +1,18 @@
+package enums;
+
+/**
+ *
+ * @author RootSoft
+ */
+public enum DAO {
+    STUDENT,
+    PROMOTOR,
+    BPCOORDINATOR,
+    CAMPUS,
+    LOKAAL,
+    PRESENTATIE,
+    BESCHIKBAARHEID,
+    INSCHRIJVING,
+    GAST;
+    
+}

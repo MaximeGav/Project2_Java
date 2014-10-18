@@ -1,0 +1,29 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package persistentie.dao;
+
+import domein.Lokaal;
+import domein.enums.DAO;
+import java.util.List;
+import persistentie.DAOFactory;
+
+/**
+ *
+ * @author MAXIME
+ */
+public class LokaalRepository {
+    
+     public Lokaal findLokaalByNaam(String lNaam) {
+        return (Lokaal) DAOFactory.getDAO(DAO.LOKAAL).get(lNaam);
+    }
+     
+     public List<Lokaal> findLokalenByCampusId(String campusNaam) {
+        LokaalDAO lDAO = (LokaalDAO) DAOFactory.getDAO(DAO.LOKAAL);
+        return  lDAO.findLokalenByCampusId(campusNaam);
+    }
+    
+}

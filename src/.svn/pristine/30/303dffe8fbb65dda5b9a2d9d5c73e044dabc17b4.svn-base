@@ -1,0 +1,73 @@
+package domein;
+
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+
+@Entity
+public class Voorstel {
+
+    //Attributen
+    private String trefwoorden;
+    @Id
+    private String titel;
+    private String probleemstelling;
+    private String context;
+    
+    @OneToMany(fetch = FetchType.LAZY)
+    private Onderzoeksdomein[] onderzoeksdomeinen;
+
+    //Constructor
+    public Voorstel(String titel, String trefwoorden, String probleemstelling, String context, Onderzoeksdomein[] onderzoeksdomeinen) {
+        this.titel = titel;
+        this.trefwoorden = trefwoorden;
+        this.probleemstelling = probleemstelling;
+        this.context = context;
+        this.onderzoeksdomeinen = onderzoeksdomeinen;
+    }
+
+    //Getters & Setters
+    public String getTrefwoorden() {
+        return trefwoorden;
+    }
+
+    public void setTrefwoorden(String trefwoorden) {
+        this.trefwoorden = trefwoorden;
+    }
+
+    public String getTitel() {
+        return titel;
+    }
+
+    public void setTitel(String titel) {
+        this.titel = titel;
+    }
+
+    public String getProbleemstelling() {
+        return probleemstelling;
+    }
+
+    public void setProbleemstelling(String probleemstelling) {
+        this.probleemstelling = probleemstelling;
+    }
+
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
+
+    public Onderzoeksdomein[] getOnderzoeksdomeinen() {
+        return onderzoeksdomeinen;
+    }
+
+    public void setOnderzoeksdomeinen(Onderzoeksdomein[] onderzoeksdomeinen) {
+        this.onderzoeksdomeinen = onderzoeksdomeinen;
+    }
+
+}

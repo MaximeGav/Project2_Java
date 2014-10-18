@@ -1,0 +1,68 @@
+package persistentie;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.EntityManager;
+import persistentie.dao.BPCoordinatorDAO;
+import persistentie.dao.BeschikbaarheidDAO;
+import persistentie.dao.CampusDAO;
+import domein.enums.DAO;
+import persistentie.dao.LokaalDAO;
+import persistentie.dao.PresentatieDAO;
+import persistentie.dao.PromotorDAO;
+import persistentie.dao.StudentDAO;
+
+/**
+ *
+ * @author ROOTSOFT
+ */
+public class DAOFactory {
+    
+    private static List<GenericDao> daos;
+
+    /*
+        Setter injection
+    */
+    public static void setDaos(List<GenericDao> daos) {
+        DAOFactory.daos = daos;
+    }
+    
+    public static void initFactory(){
+        daos = new ArrayList<>();
+        daos.add(new StudentDAO());
+        daos.add(new PromotorDAO());
+        daos.add(new BPCoordinatorDAO());
+        daos.add(new LokaalDAO());
+        daos.add(new CampusDAO());
+        daos.add(new PresentatieDAO());
+        daos.add(new BeschikbaarheidDAO());
+        
+        EntityManager em = util.JPAUtil.getEntityManagerFactory().createEntityManager();
+        for(GenericDao dao : daos){
+            dao.setEntityManager(em);
+        }
+    }
+    
+    public static GenericDao getDAO(DAO dao){
+        switch(dao){
+            case STUDENT: 
+                return daos.get(0);
+            case PROMOTOR: 
+                return daos.get(1);
+            case BPCOORDINATOR: 
+                return daos.get(2);
+            case LOKAAL: 
+                return daos.get(3);
+            case CAMPUS: 
+                return daos.get(4);
+            case PRESENTATIE: 
+                return daos.get(5);
+            case BESCHIKBAARHEID: 
+                return daos.get(6);
+            default: throw new IllegalArgumentException("DAO niet gevonden");
+        }
+    }
+    
+    
+    
+}

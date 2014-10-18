@@ -1,0 +1,42 @@
+package gui;
+
+import domein.Beschikbaarheid;
+import java.awt.Color;
+import java.awt.Component;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import persistentie.PersistentieController;
+
+public class CustomRenderer extends DefaultTableCellRenderer {
+
+    private int promotorId = 0;
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+        c.setBackground(table.getBackground());
+
+        if (promotorId != 0) {
+            for (Beschikbaarheid b : getPc().findBeschikbaarhedenByPromotorId(promotorId)) {
+                if (row == b.getTijdsvak() && column == b.getDag()) {
+                    c.setBackground(Color.PINK);
+                }
+            }
+        }
+
+        return c;
+    }
+
+    public int getPromotorId() {
+        return promotorId;
+    }
+
+    public void setPromotorId(int id) {
+        this.promotorId = id;
+    }
+
+    public PersistentieController getPc() {
+        return PersistentieController.getInstance();
+    }
+}

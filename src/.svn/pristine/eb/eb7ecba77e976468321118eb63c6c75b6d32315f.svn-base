@@ -1,0 +1,241 @@
+package domein;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import persistentie.DAOFactory;
+import domein.enums.DAO;
+import persistentie.dao.CampusRepository;
+import persistentie.dao.GastRepository;
+import persistentie.dao.InschrijvingDAO;
+import persistentie.dao.InschrijvingRepository;
+import persistentie.dao.LokaalDAO;
+import persistentie.dao.LokaalRepository;
+import persistentie.dao.PresentatieDAO;
+import persistentie.dao.PresentatieRepository;
+
+
+public class DomeinController {
+
+    //Attributen
+    private final GebruikerRepository gebruikerRepository;
+    private final PresentatieRepository presentatieRepository;
+    private final InschrijvingRepository inschrijvingRepository;
+    private final CampusRepository campusRepository;
+    private final LokaalRepository lokaalRepository;
+    private final GastRepository gastRepository;
+    private final BPCoordinator bpCoordinator;
+    
+
+    //Constructors
+    
+    /**
+     * Constructor van de domeincontroller
+     */
+    public DomeinController() {
+        DAOFactory.initFactory();
+        gebruikerRepository = new GebruikerRepository();
+        presentatieRepository = new PresentatieRepository();
+        inschrijvingRepository = new  InschrijvingRepository();
+        campusRepository = new CampusRepository();
+        lokaalRepository = new LokaalRepository();
+        gastRepository = new GastRepository();
+        bpCoordinator = gebruikerRepository.getBpCoordinator();
+    }
+
+    /**
+     * Constructor van de domeincontroller
+     *
+     * @param gebruikerRepository
+     */
+    public DomeinController(GebruikerRepository gebruikerRepository, PresentatieRepository presentatieRepository, InschrijvingRepository inschrijvingRepository, CampusRepository campusRepository, LokaalRepository lokaalRepository, GastRepository gastRepository) {
+        DAOFactory.initFactory();
+        this.gebruikerRepository = gebruikerRepository;
+        this.presentatieRepository = presentatieRepository;
+        this.inschrijvingRepository = inschrijvingRepository;
+        this.campusRepository = campusRepository;
+        this.lokaalRepository = lokaalRepository;
+        this.gastRepository = gastRepository;
+        bpCoordinator = gebruikerRepository.getBpCoordinator();
+    }
+
+    //Methoden
+    
+    // ---------- GETTERS ---------- //
+    
+    public List<Student> geefLijstStudenten() {
+        return gebruikerRepository.geefLijstStudenten();
+    }
+    
+    public List<Promotor> geefLijstPromotoren() {
+        return gebruikerRepository.geefLijstPromotoren();
+    }
+    
+    public Map<String, String> geefPromotoren() {
+        Map<String, String> promotoren = new HashMap<>();
+        for (Promotor p : geefLijstPromotoren()) {
+            promotoren.put(p.getEmail(), p.toString());
+        }
+        return promotoren;
+    }
+    
+    public Map<String, String> geefStudenten() {
+        Map<String, String> studenten = new HashMap<>();
+        for (Student s : geefLijstStudenten()) {
+            studenten.put(s.toString(), s.getEmail());
+        }
+        return studenten;
+    }
+    
+    public List<Campus> geefLijstCampussen() {
+        return campusRepository.geefLijstCampussen();
+    }
+    
+    public BPCoordinator geefBPCoordinator() {
+        return gebruikerRepository.getBpCoordinator();
+    }
+    
+    
+    public Map<String, String> geefLijstOngeplandeStudentenVanPromotor(String pmail) {
+        Map<String, String> studenten = new HashMap<>();
+        for (Student s : geefLijstStudenten()) {
+            if (s.getPromotor().getEmail().equals(pmail)) {
+                studenten.put(s.toString(), s.getEmail());
+            }
+        }
+        return studenten;
+    }
+    
+    public List<Student> geefStudentenVanPromotor(String promotorEmail)
+    {
+        List<Student> studentLijst = new ArrayList<>();
+        for(Student s : geefLijstStudenten())
+        {
+            if(s.getPromotor() !=null)
+            {
+                if(s.getPromotor().getEmail().equals(promotorEmail))
+                 {
+                       System.out.println(s.getPromotor().getEmail() +"faggot");
+                         studentLijst.add(s);
+                 }
+            }
+        }
+        return studentLijst;
+    }
+    
+    
+    
+    
+    // ---------- FIND ---------- //
+   
+    public Student findStudentByEmail(String email) {
+        return gebruikerRepository.findStudentByEmail(email);
+    }
+    
+    public Promotor findPromotorByEmail(String email) {
+        return gebruikerRepository.findPromotorByEmail(email);
+    }
+    
+    public Campus findCampusByNaam(String cNaam) {
+        return campusRepository.findCampusByNaam(cNaam);
+    }
+    
+    public Lokaal findLokaalByNaam(String lNaam) {
+        return lokaalRepository.findLokaalByNaam(lNaam);
+    }
+    
+    public Gast findGastByEmail(String email) {
+        return gastRepository.findGastByEmail(email);
+    }
+    
+    public List<Lokaal> findLokalenByCampusId(String campusNaam) {
+        return lokaalRepository.findLokalenByCampusId(campusNaam);
+    }
+    
+    
+    // --------- PROMOTOR TOEKENNEN ---------- //
+    
+    /**
+     * Methode die een student koppelt met een promotor door middel van het
+     * studentId.
+     * Voegt daarna de student toe aan de lijst van studenten van de promotor.
+     * Dit werd in commentaar gezet.
+     *
+     * @param sEmail
+     * @param pEmail
+     */
+    public void kenPromotorToe(String sEmail, String pEmail) {
+        gebruikerRepository.kenPromotorToe(sEmail, pEmail);
+    }
+    
+    public void verhoogAantalKeerJury(String promotorEmail, int aantalKeerJury) {
+        gebruikerRepository.verhoogAantalKeerJury(promotorEmail, aantalKeerJury);
+        
+    }
+    
+    
+    
+    // ---------- PRESENTATIE & PLANNING ---------- //
+    
+    public void startEditingPlanning() {
+        bpCoordinator.startEditingPlanning();
+    }
+    
+    public List<Integer> geefGeplandePresentaties() {
+        return presentatieRepository.geefPresentaties();
+    }
+    
+    public Presentatie geefPresentatie(int dag, int tijdsvak) {
+        return presentatieRepository.geefPresentatie(dag, tijdsvak);
+    }
+    //---------------------------------------------------------------------mis------------------------------------
+    public void planPresentatie(int dag, int tijdsvak, String lokaalNaam, String campusNaam, String studentEmail) {
+        PresentatieDAO pDAO = (PresentatieDAO) DAOFactory.getDAO(DAO.PRESENTATIE);
+        pDAO.planPresentatie(dag, tijdsvak, lokaalNaam, campusNaam, studentEmail);
+        //bpCoordinator.geefPlanning().addPresentatie(presentatie);
+    }
+    //------------------------------------------------------------------------------------------------------------------
+    public void verwijderPresentatie(String studentEmail) {
+        presentatieRepository.verwijderPresentatie(studentEmail);
+    }
+    
+    public List<Presentatie> findPresentatiesByLokaalId(String lokaalNaam) {
+        return presentatieRepository.findPresentatiesByLokaalId(lokaalNaam);
+    }
+    
+    public Presentatie findPresentatieByStudentEmail(String sEmail) {
+        return presentatieRepository.findPresentatieByStudentEmail(sEmail);
+    }
+    //---------------------------------------------------------------------mis------------------------------------
+    public void planningAanpassen(String studentEmail, int dag, int tijdslot, String campusNaam, String lokaalNaam) {
+        PresentatieDAO pDAO = (PresentatieDAO) DAOFactory.getDAO(DAO.PRESENTATIE);
+        pDAO.planningAanpassen(studentEmail, dag, tijdslot, campusNaam, lokaalNaam);
+    }
+        //---------------------------------------------------------------------mis------------------------------------
+    
+    
+    // ---------- JURYLEDEN ---------- //
+    
+    public void kenJuryLedenToe(String studentEmail, String juryLidEmail) {
+        PresentatieDAO pDAO = (PresentatieDAO) DAOFactory.getDAO(DAO.PRESENTATIE);
+        pDAO.kenJuryledenToe(studentEmail, juryLidEmail);
+    }
+    
+    // ---------- INSCHRIJVINGEN ---------- //
+    
+    
+    public List<Inschrijving> findInschrijvingenByPresentatieId(String studentEmail) {
+        return inschrijvingRepository.findInschrijvingenByPresentatieId(studentEmail);
+    }
+    
+    public List<Inschrijving> findInschrijvingenByGastEmail(String gastEmail) {
+        return inschrijvingRepository.findInschrijvingenByGastEmail(gastEmail);
+    }
+    
+    public void inschrijvingGoedkeuren(String studentEmail, String gastEmail) {
+        InschrijvingDAO iDAO = (InschrijvingDAO) DAOFactory.getDAO(DAO.INSCHRIJVING);
+        iDAO.inschrijvingGoedkeuren(studentEmail, gastEmail);
+    }
+
+}

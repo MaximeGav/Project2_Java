@@ -1,0 +1,133 @@
+package domein;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Table;
+
+
+@Entity
+@Table(name = "Gebruiker")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "Type", discriminatorType = DiscriminatorType.STRING)
+@Access(AccessType.FIELD)
+public abstract class Gebruiker {
+
+    //Attributen
+    //private int id;
+    @Id
+    private String email;
+    
+    private String voornaam, famnaam, wachtwoord;
+
+    //Constructor  
+    /**
+    * Constructor van een gebruiker
+    * @param voornaam van een gebruiker
+    * @param famnaam van een gebruiker
+    * @param email van een gebruiker
+    * @param wachtwoord van een gebruiker
+    */
+    public Gebruiker(String voornaam, String famnaam, String email, String wachtwoord) {
+        this.voornaam = voornaam;
+        this.famnaam = famnaam;
+        this.email = email;
+        this.wachtwoord = wachtwoord;
+    }
+
+    
+    /*public Gebruiker(int id, String voornaam, String famnaam, String email, String wachtwoord) {
+        this(voornaam,famnaam, email, wachtwoord);
+        this.id = id;
+    }*/
+
+    //Methoden
+    /**
+     * Methode om alle gegevens van een gebruiker weer te geven
+     * @return Opsomming van de gegevens van de gebruiker
+     */
+    @Override
+    public String toString() {
+        //return voornaam + " " + famnaam + ", emailadres: " + email;
+        return voornaam + " " + famnaam;
+    }
+          
+    //Getters & Setters
+    /*public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }*/
+
+    /**
+     * De getter van de voornaam van de gebruiker
+     * @return De voornaam van de gebruiker
+     */
+    public String getVoornaam() {
+        return voornaam;
+    }
+
+    /**
+     * De setter van de voornaam van de gebruiker
+     * @param voornaam 
+     */
+    public void setVoornaam(String voornaam) {
+        this.voornaam = voornaam;
+    }
+
+    /**
+     * De getter van de familienaam van de gebruiker
+     * @return De familienaam van de gebruiker
+     */
+    public String getFamnaam() {
+        return famnaam;
+    }
+
+    /**
+     * De setter van de familienaam van de gebruiker
+     * @param famnaam 
+     */
+    public void setFamnaam(String famnaam) {
+        this.famnaam = famnaam;
+    }
+
+    /**
+     * De getter van het emailadres van de gebruiker
+     * @return Het emailadres van de gebruiker
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * De setter van het emailadres van de gebruiker
+     * @param email 
+     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    /**
+     * De getter van het wachtwoord van de gebruiker
+     * @return Het wachtwoord van de gebruiker
+     */
+    public String getWachtwoord() {
+        return wachtwoord;
+    }
+
+    /**
+     * De setter van het wachtwoord van de gebruiker
+     * @param wachtwoord 
+     */
+    public void setWachtwoord(String wachtwoord) {
+        this.wachtwoord = wachtwoord;
+    }
+
+}

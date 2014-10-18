@@ -1,0 +1,100 @@
+package domein;
+
+import java.io.Serializable;
+import java.util.List;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+
+@Entity
+@DiscriminatorValue("Student")
+//@Table(name = "student")
+public class Student extends Gebruiker implements Serializable {
+
+    //Attributen
+
+    @ManyToOne
+    private Campus campus;
+    
+    @OneToOne
+    private Presentatie presentatie;
+    
+    @ManyToOne
+    private Promotor promotor;
+    
+    @OneToMany
+    private List<Voorstel> voorstellen;
+    
+    //@Transient
+    //private GenericDao<Campus> campusdao;
+
+    public Student() {
+        
+    }
+
+
+    public Student(String voornaam, String familienaam, String email, String wachtwoord, String username) {
+       super(voornaam, familienaam, email, wachtwoord, username);
+    }
+    
+    public void kenPromotorToe(Promotor promotor)
+    {
+        setPromotor(promotor);
+    }
+
+
+
+    //Methoden
+    /**
+     * Methode om alle gegevens van een student weer te geven
+     * @return Opsomming van de gegevens van de student
+     */
+    @Override
+    public String toString() {
+        if (hasPromotor()) {
+            return super.toString();// + " heeft reeds een promotor.";
+        } else {
+            return super.toString();
+        }
+    }
+
+    //Getters & Setters
+    public boolean hasPromotor() {
+        return (this.promotor != null);
+    }
+
+    public Presentatie getPresentatie() {
+        return presentatie;
+    }
+
+    public void setPresentatie(Presentatie presentatie) {
+        this.presentatie = presentatie;
+    }
+
+    public Campus getCampus() {
+        return campus;
+    }
+
+    public void setCampus(Campus campus) {
+        this.campus = campus;
+    }
+
+    public Promotor getPromotor() {
+        return promotor;
+    }
+
+    public void setPromotor(Promotor promotor) {
+        this.promotor = promotor;
+    }
+
+    public List<Voorstel> getVoorstellen() {
+        return voorstellen;
+    }
+
+    public void setVoorstellen(List<Voorstel> voorstellen) {
+        this.voorstellen = voorstellen;
+    }
+    
+}

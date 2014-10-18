@@ -1,0 +1,123 @@
+package domein;
+
+import java.util.*;
+import persistentie.PersistentieController;
+
+public class GebruikerRepository {
+
+    //Attributen
+    private List<Student> studenten;
+    private List<Promotor> promotoren;
+    private BPCoordinator bpCoordinator;
+    private PersistentieController pc;
+
+    //Constructors
+    /**
+     * Constructor van de gebruikerrepository
+     */
+    public GebruikerRepository() {
+        pc = PersistentieController.getInstance();
+        studenten = pc.geefStudenten();
+        promotoren = pc.geefPromotoren();
+        bpCoordinator = pc.geefBPCoordinator();
+    }
+
+    //Methoden
+    /**
+     * Methode om een lijst van alle studenten te krijgen
+     *
+     * @return Lijst van alle studenten
+     */
+    public List<Student> geefLijstStudenten() {
+        //return studenten;
+        return pc.geefStudenten();
+    }
+
+    /**
+     * Methode om een lijst van alle promotoren te krijgen
+     *
+     * @return Lijst van alle promotoren
+     */
+    public List<Promotor> geefLijstPromotoren() {
+        return promotoren;
+    }
+
+    /**
+     * Methode die een student koppelt met een promotor door middel van het
+     * studentId
+     *
+     * @param studentId
+     * @param promotorId
+     */
+    public void kenPromotorToe(Student student, Promotor promotor) {
+        pc.kenPromotorToe(studentId, promotorId);
+
+        if (promotorId != -1) {
+            Promotor p = pc.findPromotorById(promotorId);
+            Student s = pc.findStudentById(studentId);
+
+            p.addStudent(s);
+            p.setAantalKeerJury(p.getAantalKeerJury() + 1);
+        }
+    }
+
+    public void verhoogAantalKeerJury(Promotor promotor, int aantalKeerJury) {
+        pc.verhoogAantalKeerJury(promotorId, aantalKeerJury);
+    }
+
+    /**
+     * Methode die een student toevoegd aan de lijst van studenten
+     *
+     * @param student
+     */
+    public void addStudent(Student student) {
+        studenten.add(student);
+        pc.voegStudentToe(student);
+    }
+
+    /**
+     * Methode die een promotor toevoegd aan de lijst van promotoren
+     *
+     * @param promotor
+     */
+    public void addPromotor(Promotor promotor) {
+        promotoren.add(promotor);
+        pc.voegPromotorToe(promotor);
+    }
+
+    public Student findStudentById(int studentId) {
+        return pc.findStudentById(studentId);
+    }
+
+    public Promotor findPromotorById(int promotorId) {
+        return pc.findPromotorById(promotorId);
+    }
+
+    //Getters en Setters
+    /**
+     * Setter van de lijst van studenten
+     *
+     * @param lijst van studenten
+     */
+    public void setStudenten(List<Student> lijst) {
+        this.studenten = lijst;
+    }
+
+    /**
+     * Setter van de lijst van promotoren
+     *
+     * @param lijst van promotoren
+     */
+    public void setPromotoren(List<Promotor> lijst) {
+        this.promotoren = lijst;
+    }
+
+    public BPCoordinator getBpCoordinator() {
+        if (bpCoordinator == null) {
+            bpCoordinator = pc.geefBPCoordinator();
+        }
+        return bpCoordinator;
+    }
+    
+
+}

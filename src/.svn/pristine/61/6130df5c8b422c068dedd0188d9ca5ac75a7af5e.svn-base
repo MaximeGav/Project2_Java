@@ -1,0 +1,185 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package persistentie;
+
+import domein.BPCoordinator;
+import domein.Beschikbaarheid;
+import domein.Campus;
+import domein.Gast;
+import domein.Inschrijving;
+import domein.Lokaal;
+import domein.Onderzoeksdomein;
+import domein.Planning;
+import domein.Presentatie;
+import domein.Promotor;
+import domein.Student;
+import domein.Voorstel;
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.EntityManager;
+
+/**
+ *
+ * @author MAXIME
+ */
+public class DaoFactory {
+    private static List<GenericDao> daos;
+
+    /*
+        Setter injection
+    */
+    public static void setDaos(List<GenericDao> daos) {
+        DaoFactory.daos = daos;
+    }
+    
+    public static void initializeDaos(){
+        daos = new ArrayList<>();
+        daos.add(new BPCoordinatorDao());
+        daos.add(new BeschikbaarheidDao());
+        daos.add(new CampusDao());
+        daos.add(new GastDao());
+        daos.add(new InschrijvingDao());
+        daos.add(new LokaalDao());
+        daos.add(new OnderzoeksdomeinDao());
+        daos.add(new PlanningDao());
+        daos.add(new PresentatieDao());
+        daos.add(new PromotorDao());
+        daos.add(new StudentDao());
+        daos.add(new VoorstelDao());
+        
+        EntityManager em = util.JPAUtil.getEntityManagerFactory().createEntityManager();
+        for(GenericDao dao : daos){
+            dao.setEntityManager(em);
+        }
+    }
+    
+    public static GenericDao getDao(String dao){
+        switch(dao){
+            case "BPCoordinatordao": return daos.get(0);
+            case "beschikbaarheiddao": return daos.get(1);
+            case "campusdao": return daos.get(2);
+            case "gastdao": return daos.get(3);
+            case "inschrijvingdao": return daos.get(4);
+            case "lokaaldao": return daos.get(5);
+            case "onderzoeksdomeindao": return daos.get(6);
+            case "planningdao" : return daos.get(7);
+            case "presentatiedao" : return daos.get(8);
+            case "promotordao" : return daos.get(9);
+            case "studentdao" : return daos.get(10);
+            case "voorsteldao" : return daos.get(11);
+            default: throw new IllegalArgumentException("Dao niet gevonden");
+        }
+    }
+    
+    
+    private static class BPCoordinatorDao extends GenericDao<BPCoordinator> 
+    {
+        public BPCoordinatorDao() 
+        {
+            super(BPCoordinator.class);
+        }
+    }
+    
+     private static class BeschikbaarheidDao extends GenericDao<Beschikbaarheid> 
+    {
+        public BeschikbaarheidDao() 
+        {
+            super(Beschikbaarheid.class);
+        }
+    }
+     
+      private static class CampusDao extends GenericDao<Campus> 
+    {
+        public CampusDao() 
+        {
+            super(Campus.class);;
+        }
+    }
+      
+      
+      private static class GastDao extends GenericDao<Gast> 
+    {
+        public GastDao() 
+        {
+            super(Gast.class);;
+        }
+    }
+      
+      
+      private static class InschrijvingDao extends GenericDao<Inschrijving> 
+    {
+        public InschrijvingDao() 
+        {
+            super(Inschrijving.class);;
+        }
+    }
+      
+      
+      private static class LokaalDao extends GenericDao<Lokaal> 
+    {
+        public LokaalDao() 
+        {
+            super(Lokaal.class);;
+        }
+    }
+    
+      
+      private static class OnderzoeksdomeinDao extends GenericDao<Onderzoeksdomein> 
+    {
+        public OnderzoeksdomeinDao() 
+        {
+            super(Onderzoeksdomein.class);;
+        }
+    }
+      
+      
+      private static class PlanningDao extends GenericDao<Planning> 
+    {
+        public PlanningDao() 
+        {
+            super(Planning.class);;
+        }
+    }
+      
+      
+      
+      private static class PresentatieDao extends GenericDao<Presentatie> 
+    {
+        public PresentatieDao() 
+        {
+            super(Presentatie.class);;
+        }
+    }
+      
+      
+      private static class PromotorDao extends GenericDao<Promotor> 
+    {
+        public PromotorDao() 
+        {
+            super(Promotor.class);;
+        }
+    }
+      
+      
+      
+      private static class StudentDao extends GenericDao<Student> 
+    {
+        public StudentDao() 
+        {
+            super(Student.class);;
+        }
+    }
+      
+      
+      private static class VoorstelDao extends GenericDao<Voorstel> 
+    {
+        public VoorstelDao() 
+        {
+            super(Voorstel.class);;
+        }
+    }
+}

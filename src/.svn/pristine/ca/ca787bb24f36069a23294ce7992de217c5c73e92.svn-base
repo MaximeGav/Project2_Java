@@ -1,0 +1,45 @@
+package resources;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+
+/**
+ *
+ * @author RootSoft
+ */
+public class PopUpMenu extends JPopupMenu {
+    
+    //Attributes
+    private JMenuItem mnuPlannen;
+    private JMenuItem mnuBewerken;
+    private JMenuItem mnuJuryToevoegen;
+    private JMenuItem mnuBezoekersToevoegen;
+    private JMenuItem mnuOngeplandeStudenten;
+    
+    public PopUpMenu(ActionListener listener){
+        
+        //Adds the menu items to the popup
+        mnuPlannen = new JMenuItem("Plannen");
+        mnuPlannen.addActionListener(listener);
+        add(mnuPlannen);
+        
+        mnuBewerken = new JMenuItem("Bewerken");
+        mnuBewerken.addActionListener(listener);
+        add(mnuBewerken);
+        
+        mnuJuryToevoegen = new JMenuItem("Juryleden toevoegen");
+        mnuJuryToevoegen.addActionListener(listener);
+        add(mnuJuryToevoegen);
+        
+        mnuBezoekersToevoegen = new JMenuItem("Bezoekers toevoegen");
+        mnuBezoekersToevoegen.addActionListener(listener);
+        add(mnuBezoekersToevoegen);
+        
+        mnuOngeplandeStudenten = new JMenuItem("Ongeplande studenten");
+        mnuOngeplandeStudenten.addActionListener(listener);
+        add(mnuOngeplandeStudenten);
+    }
+    
+}

@@ -1,0 +1,273 @@
+package domein;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import persistentie.PersistentieController;
+
+public class DomeinController {
+
+    //Attributen
+    private final GebruikerRepository gebruikerRepository;
+    private final PersistentieController pc;
+    private final BPCoordinator bpCoordinator;
+    private Planning planning;
+
+    //Constructors
+    /**
+     * Constructor van de domeincontroller
+     */
+    
+    public DomeinController() {
+        gebruikerRepository = new GebruikerRepository();
+        bpCoordinator = this.gebruikerRepository.getBpCoordinator();
+        planning = new Planning();
+        pc = PersistentieController.getInstance();
+    }
+
+    /**
+     * Constructor van de domeincontroller
+     *
+     * @param gebruikerRepository
+     */
+    public DomeinController(GebruikerRepository gebruikerRepository) {
+        this.gebruikerRepository = gebruikerRepository;
+        bpCoordinator = this.gebruikerRepository.getBpCoordinator();
+        pc = PersistentieController.getInstance();
+        planning = new Planning();
+    }
+
+    //Methoden
+    /**
+     * Methode die een lijst van studenten instelt
+     *
+     * @param lijst van studenten
+     */
+    public void stelStudentenlijstIn(List<Student> lijst) {
+        this.gebruikerRepository.setStudenten(lijst);
+        
+    }
+
+    /**
+     * Methode die een lijst van promotoren instelt
+     *
+     * @param lijst van promotoren
+     */
+    public void stelPromotorenlijstIn(List<Promotor> lijst) {
+        this.gebruikerRepository.setPromotoren(lijst);
+    }
+
+    /**
+     * Methode om een lijst van alle studenten te krijgen
+     *
+     * @return Lijst van alle studenten
+     */
+    public List<Student> geefLijstStudenten() {
+        return gebruikerRepository.geefLijstStudenten();
+    }
+
+    public Map<String, Integer> geefStudenten() {
+        Map<String, Integer> studenten = new HashMap<>();
+        for (Student s : geefLijstStudenten()) {
+            studenten.put(s.toString(), s.getId());
+        }
+        return studenten;
+    }
+
+    /**
+     * Methode om een lijst van alle promotoren te krijgen
+     *
+     * @return Lijst van alle promotoren
+     */
+    public List<Promotor> geefLijstPromotoren() {
+        return gebruikerRepository.geefLijstPromotoren();
+    }
+    public Map<String, Integer> geefLijstOngeplandeStudenten() {
+        Map<String, Integer> studenten = new HashMap<>();
+        for (Student s : geefLijstStudenten()) {
+            if (!s.hasPromotor()) {
+                studenten.put(s.toString(), s.getId());
+            }
+        }
+        return studenten;
+    }
+    
+    public Map<String, Integer> geefLijstOngeplandeStudentenVanPromotor(int promotorId) {
+        Map<String, Integer> studenten = new HashMap<>();
+        for (Student s : geefLijstStudenten()) {
+            if (s.getPromotorId() == promotorId) {
+                studenten.put(s.toString(), s.getId());
+            }
+        }
+        return studenten;
+    }
+    
+
+    //Promotor Toekennen
+    /**
+     * Methode die een student koppelt met een promotor door middel van het
+     * studentId
+     *
+     * @param studentId
+     * @param promotorId
+     */
+    public void kenPromotorToe(int studentId, int promotorId) {
+        this.gebruikerRepository.kenPromotorToe(studentId, promotorId);
+    }
+
+    public void verhoogAantalKeerJury(int promotorId, int aantalKeerJury) {
+        gebruikerRepository.verhoogAantalKeerJury(promotorId, aantalKeerJury);
+    }
+
+    public int[][] geefBeschikbaarheden(int promotorID) {
+        return bpCoordinator.geefPlanning().geefBeschikbaarheden(promotorID);
+    }
+
+    public Map<Integer, String> geefPromotoren() {
+        Map<Integer, String> promotoren = new HashMap<>();
+        for (Promotor p : geefLijstPromotoren()) {
+            promotoren.put(p.getId(), p.toString());
+        }
+        return promotoren;
+    }
+
+    //Presentatie Plannen    
+    public Student findStudentById(int studentId) {
+        return this.gebruikerRepository.findStudentById(studentId);
+    }
+
+    public Promotor findPromotorById(int promotorId) {
+        return this.gebruikerRepository.findPromotorById(promotorId);
+    }
+
+    public void planPresentatie(int dag, int tijdsvak, int lokaalId, int campusId, int studentID) {
+        Presentatie presentatie = new Presentatie(dag, tijdsvak, lokaalId, campusId, studentID);
+        bpCoordinator.geefPlanning().addPresentatie(presentatie);
+        pc.bewaarPresentatie(presentatie);
+    }
+
+    /*public void planPresentatie(Presentatie p) {
+     planPresentatie(p.getDag(), p.getTijdsvak(), p.getLokaal(), p.getCampus(), p.getStudentID());
+     }*/
+    public void startEditingPlanning() {
+        bpCoordinator.startEditingPlanning();
+    }
+
+    public List<Integer> geefGeplandePresentaties() {
+        //bpCoordinator.geefPlanning().setPresentaties(pc.geefPresentaties());
+        return bpCoordinator.geefPlanning().geefGeplandePresentaties();
+    }
+
+    public List<Presentatie> geefLijstPresentaties() {
+        return pc.geefPresentaties();
+    }
+
+    public Presentatie geefPresentatie(int dag, int tijdsvak) {
+        return pc.findPresentatieByDagAndTijdsvak(dag, tijdsvak);
+        //return bpCoordinator.geefPlanning().geefPresentatie(dag, tijdsvak);
+    }
+    
+    public Presentatie geefPresentatieById(int studentId) {
+        return pc.findPresentatieById(studentId);
+    }
+
+    public List<String> geefInfoPresentatie(int dag, int tijdsvak) {
+        List<String> info = bpCoordinator.geefPlanning().geefPresentatie(dag, tijdsvak);
+
+        Iterator<Map.Entry<String, Integer>> entries = geefStudenten().entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<String, Integer> entry = entries.next();
+            if (entry.getValue() == Integer.parseInt(info.get(2))) {
+                info.add(entry.getKey());
+            }
+        }
+        return info;
+    }
+
+    public List<Campus> geefCampussen() {
+        return this.planning.geefCampussen();
+    }
+
+    public List<Lokaal> geefLokalen() {
+        return this.planning.geefLokalen();
+    }
+
+    public List<Lokaal> findLokalenByCampusId(int campusId) {
+        return this.planning.findLokalenByCampusId(campusId);
+    }
+
+    public Campus findCampusById(int campusId) {
+        return pc.findCampusById(campusId);
+    }
+
+    public Lokaal findLokaalById(int lokaalId) {
+        return pc.findLokaalById(lokaalId);
+    }
+
+    public void kenJuryLedenToe(int studentId, int promotorId) {
+        pc.findPresentatieByStudentId(studentId).voegJuryLedenToe(promotorId);
+    }
+
+    public List<Gast> geefLijstGasten() {
+        return pc.geefGasten();
+    }
+    
+    public Gast findGastById(int gastId) {
+        return pc.findGastById(gastId);
+    }
+
+    public List<Beschikbaarheid> geefLijstBeschikbaarheden() {
+        return pc.geefBeschikbaarheden();
+    }
+
+    public List<Beschikbaarheid> findBeschikbaarhedenByPromotorId(int promotorId) {
+        return pc.findBeschikbaarhedenByPromotorId(promotorId);
+    }
+
+    public Presentatie findPresentatieById(int id) {
+        return pc.findPresentatieById(id);
+    }
+    
+    public Presentatie findPresentatieByStudentId(int studentId) {
+        return pc.findPresentatieByStudentId(studentId);
+    }
+
+    public List<Presentatie> findPresentatiesByLokaalId(int lokaalId) {
+        return pc.findPresentatiesByLokaalId(lokaalId);
+    }
+
+    //Methodes van matthieu die wegmogen
+    public List<String> geefLokalen(String campus) {
+        return bpCoordinator.geefPlanning().geefLokalen(campus);
+    }
+
+    public List<Integer> geefGeplandePresentaties(String campus, String lokaal) {
+        return bpCoordinator.geefPlanning().geefGeplandePresentaties(campus, lokaal);
+    }
+
+    public void planningAanpassen(int presentatieId, int dag, int tijdSlot, int campusId, int lokaalId, int studentId) {
+        /*System.out.println(presentatieId);
+        System.out.println(dag);
+        System.out.println(tijdSlot);
+        System.out.println(campusId);
+        System.out.println(lokaalId);
+        System.out.println(studentId);*/
+        
+        
+        pc.planningAangepassen(presentatieId, dag, tijdSlot, campusId, lokaalId, studentId);
+    }
+
+    public List<Inschrijving> findInschrijvingenByGastId(int gastId) {
+        return pc.findInschrijvingenByGastId(gastId);
+    }
+
+    public List<Inschrijving> findInschrijvingenByPresentatieId(int presentatieId) {
+        return pc.findInschrijvingenByPresentatieId(presentatieId);
+    }
+    
+    public void inschrijvingGoedkeuren(int gastId, int presentatieId) {
+        pc.inschrijvingGoedkeuren(gastId, presentatieId);
+    }
+
+}

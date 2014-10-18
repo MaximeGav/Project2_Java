@@ -1,0 +1,414 @@
+package gui;
+
+import domein.DomeinController;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import domein.observers.PlanningDialog;
+import domein.observers.PlanningObserver;
+
+/**
+ *
+ * @author MAXIME
+ */
+public class PlanningBewerkenJDialog extends javax.swing.JDialog implements PlanningDialog {
+
+    /**
+     * Creates new form PlanningBewerkenJFrame
+     */
+    private final DomeinController dc;
+    private final Map<String, Integer> dagen;
+    private List<String> begintijdstippen;
+    private final TreeMap<String, Integer> dagenGesorteerd;
+    private List<String> lokalen;
+    private List<String> campussen;
+    private final List<String> geselecteerdePresentatie;
+    private final Set<PlanningObserver> observers;
+    private final String promotorEmail;
+    private final Map<String, String> studentenMap;
+    private final Map<String, String> promotorenMap;
+    private final String campusNaam;
+    private final String studentEmail;
+
+    public PlanningBewerkenJDialog(final DomeinController dc, List<String> geselecteerdePresentatie, String campusNaam) {
+        initComponents();
+
+        this.dc = dc;
+        this.geselecteerdePresentatie = geselecteerdePresentatie;
+        this.campusNaam = campusNaam;
+        studentenMap = dc.geefStudenten();
+        promotorenMap = dc.geefPromotoren();
+        dagen = new HashMap<>();
+        begintijdstippen = new ArrayList<>();
+        this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("images/small_icon.png")).getImage());
+        getContentPane().setLayout(null);
+
+        // Get the size of the screen
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+        // Determine the new location of the window
+        int w = getSize().width;
+        int h = getSize().height;
+        int x = (dim.width - w) / 2;
+        int y = (dim.height - h) / 2;
+
+        // Move the window
+        setLocation(x, y);
+
+        setVisible(true);
+        setResizable(true);
+        setTitle("Bachelorproefapplicatie HoGent");
+        dagen.put("Maandag", 1);
+        dagen.put("Dinsdag", 2);
+        dagen.put("Woensdag", 3);
+        dagen.put("Donderdag", 4);
+        dagen.put("Vrijdag", 5);
+        ValueComparator bvc = new ValueComparator(dagen);
+        dagenGesorteerd = new TreeMap<>(bvc);
+        dagenGesorteerd.putAll(dagen);
+
+        setDagCombobox(cbDag);
+        cbDag.setSelectedIndex(Integer.parseInt(geselecteerdePresentatie.get(3)) - 1);
+        cbBeginTijdstip.removeAllItems();
+        int currentHour = 8;
+        boolean halfHour = false;
+        for (int i = 0; i < 18; i++) {
+            String time, endTime;
+            time = (halfHour ? currentHour : currentHour--) + "u" + (halfHour ? "30" : "00");
+            begintijdstippen.add(time);
+            cbBeginTijdstip.addItem(time);
+            currentHour++;
+            halfHour = !halfHour;
+        }
+
+        cbBeginTijdstip.setSelectedIndex(Integer.parseInt(geselecteerdePresentatie.get(4)));
+        lblEindTijdStip.setText(begintijdstippen.get(cbBeginTijdstip.getSelectedIndex() + 1));
+
+        cbBeginTijdstip.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                int index = cbBeginTijdstip.getSelectedIndex() + 1;
+                if (index == 18) {
+                    lblEindTijdStip.setText("17u00");
+                } else {
+                    lblEindTijdStip.setText(begintijdstippen.get(index));
+                }
+            }
+        });
+
+        //cbCampus.setSelectedIndex(geselecteerdePresentatie.getCampus());
+        setCampusCombobox(cbCampus);
+        setLokaalCombobox(cbLokaal, (String) cbCampus.getSelectedItem());
+
+        cbCampus.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                setLokaalCombobox(cbLokaal, (String) cbCampus.getSelectedItem());
+            }
+        });
+
+        
+        studentEmail = geselecteerdePresentatie.get(2);
+        List<String> student = dc.geefStudentByEmail(studentEmail);
+        this.promotorEmail = student.get(3);
+        lblToonPromotor.setText(promotorenMap.get(promotorEmail));
+        lblStudent.setText(student.get(0) + " " + student.get(1));
+       
+        
+        observers = new HashSet<>();
+    }
+
+    private void setDagCombobox(JComboBox combobox) {
+
+        combobox.removeAllItems();
+        for (String dagNaam : dagenGesorteerd.keySet()) {
+            combobox.addItem(dagNaam);
+        }
+
+    }
+
+    private void setCampusCombobox(JComboBox combobox) {
+        combobox.removeAllItems();
+        campussen = dc.geefCampussen();
+        for (String campus : campussen) {
+            combobox.addItem(campus);
+        }
+    }
+
+    private void setLokaalCombobox(JComboBox combobox, String campus) {
+        combobox.removeAllItems();
+        campussen = dc.geefCampussen();
+        for (String campusIt : campussen) {
+            if (campusIt.equals(campus)) {
+                lokalen = dc.geefLokalenByCampusId(campusIt);
+                for (String lokaal : lokalen) {
+                    combobox.addItem(lokaal);
+                }
+            }
+        }
+
+    }
+
+    private void setStudentCombobox(JComboBox combobox) {
+        combobox.removeAllItems();
+
+        for (Map.Entry<String, String> student : studentenMap.entrySet()) {
+            combobox.addItem(student.getKey());
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        lblDatum = new javax.swing.JLabel();
+        lblBegin = new javax.swing.JLabel();
+        lblEind = new javax.swing.JLabel();
+        lblLokaal = new javax.swing.JLabel();
+        lblCampus = new javax.swing.JLabel();
+        lblPromotor = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        cbDag = new javax.swing.JComboBox();
+        cbBeginTijdstip = new javax.swing.JComboBox();
+        lblEindTijdStip = new javax.swing.JLabel();
+        cbLokaal = new javax.swing.JComboBox();
+        cbCampus = new javax.swing.JComboBox();
+        btnOpslaan = new javax.swing.JButton();
+        lblToonPromotor = new javax.swing.JLabel();
+        lblStudent = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+
+        lblDatum.setText("Dag van de week:");
+        lblDatum.setToolTipText("");
+
+        lblBegin.setText("Beginstijdstip:");
+        lblBegin.setToolTipText("");
+
+        lblEind.setText("Eindstijdstip:");
+        lblEind.setToolTipText("");
+
+        lblLokaal.setText("Lokaal:");
+        lblLokaal.setToolTipText("");
+
+        lblCampus.setText("Campus:");
+        lblCampus.setToolTipText("");
+
+        lblPromotor.setText("Promotor:");
+        lblPromotor.setToolTipText("");
+
+        jLabel3.setText("Student:");
+
+        cbDag.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        cbBeginTijdstip.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        lblEindTijdStip.setText("jLabel1");
+
+        cbLokaal.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        cbCampus.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        btnOpslaan.setText("Opslaan");
+        btnOpslaan.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnOpslaanActionPerformed(evt);
+            }
+        });
+
+        lblToonPromotor.setText("jLabel2");
+
+        lblStudent.setText("jLabel1");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblDatum)
+                            .addComponent(lblBegin)
+                            .addComponent(lblEind)
+                            .addComponent(lblCampus)
+                            .addComponent(lblPromotor)
+                            .addComponent(jLabel3))
+                        .addGap(47, 47, 47)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(cbDag, 0, 197, Short.MAX_VALUE)
+                            .addComponent(cbBeginTijdstip, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(lblEindTijdStip, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cbLokaal, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cbCampus, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(11, 11, 11)
+                                .addComponent(btnOpslaan))
+                            .addComponent(lblToonPromotor, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(lblStudent, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(0, 46, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblLokaal)
+                        .addGap(38, 38, 38))))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(19, 19, 19)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblDatum)
+                    .addComponent(cbDag, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblBegin)
+                    .addComponent(cbBeginTijdstip, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(lblEind)
+                    .addComponent(lblEindTijdStip, javax.swing.GroupLayout.DEFAULT_SIZE, 21, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCampus)
+                    .addComponent(cbCampus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(13, 13, 13)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblLokaal)
+                    .addComponent(cbLokaal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(21, 21, 21)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblPromotor)
+                    .addComponent(lblToonPromotor, javax.swing.GroupLayout.DEFAULT_SIZE, 21, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3)
+                    .addComponent(lblStudent, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
+                .addComponent(btnOpslaan)
+                .addContainerGap())
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void btnOpslaanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOpslaanActionPerformed
+        String lNaam = "";
+        
+        String lokaal = (String) cbLokaal.getSelectedItem();
+        for (String l : dc.geefLokalenByCampusId(campusNaam)) {
+            if (l.equals(lokaal)) {
+                lNaam = l;
+            }
+        }
+      
+        dc.planningAanpassen(studentEmail,cbDag.getSelectedIndex()+1,cbBeginTijdstip.getSelectedIndex(), campusNaam,lNaam);
+        
+        notifyObservers();
+        this.dispose();
+
+    }//GEN-LAST:event_btnOpslaanActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(PlanningBewerkenJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the dialog */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnOpslaan;
+    private javax.swing.JComboBox cbBeginTijdstip;
+    private javax.swing.JComboBox cbCampus;
+    private javax.swing.JComboBox cbDag;
+    private javax.swing.JComboBox cbLokaal;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel lblBegin;
+    private javax.swing.JLabel lblCampus;
+    private javax.swing.JLabel lblDatum;
+    private javax.swing.JLabel lblEind;
+    private javax.swing.JLabel lblEindTijdStip;
+    private javax.swing.JLabel lblLokaal;
+    private javax.swing.JLabel lblPromotor;
+    private javax.swing.JLabel lblStudent;
+    private javax.swing.JLabel lblToonPromotor;
+    // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void addObserver(PlanningObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(PlanningObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (PlanningObserver observer : observers) {
+            observer.updatePlanning();
+        }
+    }
+
+
+
+}
+
+class ValueComparator implements Comparator<String> {
+
+    Map<String, Integer> base;
+
+    public ValueComparator(Map<String, Integer> base) {
+        this.base = base;
+    }
+
+    // Note: this comparator imposes orderings that are inconsistent with equals.    
+    public int compare(String a, String b) {
+        if (base.get(a) >= base.get(b)) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+    
+    
+    
+
+}

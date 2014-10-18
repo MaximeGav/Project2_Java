@@ -1,0 +1,95 @@
+package ui;
+
+import domein.DomeinController;
+import domein.Promotor;
+import domein.Student;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class ConsoleFrame {
+    
+    //Attributen
+    private static Scanner scan = new Scanner(System.in);
+    
+    public static void main(String [] args) {
+        DomeinController dc = new DomeinController();
+        
+        promotorToekennen(dc);
+    }  
+    
+    //Methoden
+    /**
+     * Kent een promotor toe aan student(en).
+     * UC 2
+     * @param dc DomeinController
+     */
+    public static void promotorToekennen(DomeinController dc) {
+        
+        System.out.println("\n*****Welkom op de bachelorproefapplicatie van HoGent*****\n");
+        
+        //Toon lijst van studenten
+        List<Student> lijstStudenten = dc.geefLijstStudenten();
+        List<Student> nieuweLijst = new ArrayList<>();
+
+        if (!lijstStudenten.isEmpty()) {
+            int i = 1;
+            for (Student s : lijstStudenten) {
+                System.out.println(i + ". " + s);
+                i++;
+            }
+            
+            //BPC selecteert student(en)
+            System.out.println("Welke studenten wenst U te selecteren? Geef 0 in om te stoppen");
+            int snr = scan.nextInt();
+
+            while(snr != 0) {
+                Student student = lijstStudenten.get(snr-1);
+                nieuweLijst.add(student);
+                System.out.println("U selecteerde student " + student.getVoornaam() + " " + student.getFamnaam());
+                System.out.println("Welke studenten wenst U nog te selecteren? Geef 0 in om te stoppen");
+                snr = scan.nextInt();
+            }
+            
+            //Toon lijst van promotoren
+            List<Promotor> lijstPromotoren = dc.geefLijstPromotoren();
+                
+            int j = 1;
+            for (Promotor p : lijstPromotoren) {
+                System.out.println(j + ". " + p);
+                j++;
+            }
+
+            //BPC selecteer promotor
+            System.out.println("Welke promotor wenst U te selecteren?");
+            int pnr = scan.nextInt();
+            Promotor p = lijstPromotoren.get(pnr-1);
+            System.out.println("U selecteerde promotor " + p.getVoornaam() + " " + p.getFamnaam());
+            if ((p.getStudenten().size() + nieuweLijst.size()) < p.MAXAANTALSTUDENTEN) {
+                p.voegStudentenToe(nieuweLijst);
+            }
+
+            //Update de DB
+            for (Student s : nieuweLijst) {
+                //dc.kenPromotorToe(s.getId(), p);
+                System.out.println("Student " + s.getVoornaam() + " " + s.getFamnaam() + " werd gekoppeld met promotor " 
+                        + p.getVoornaam() + " " + p.getFamnaam());
+            }
+        }
+        else
+            System.out.println("Er werden geen studenten gevonden.");
+
+        //---- Intern!
+        
+        //Registreren koppeling in DB tussen student en promotor. (Tomas)
+        
+        //Uitleg
+        //De domeincontroller geeft enkel primitieve waarden of String terug met de waarde die nodig is.
+        //Vb. Studentnaam, promotorId, etc.
+        //In de package GUI mogen geen domeinobjecten voorkomen! (Student, Promotor, etc). Ook geen lijst daarvan.
+        //De console gebruikt sout (system.out.println) om gegevens aan de gebruiker te tonen en een scanner om waarden in te geven.
+        //De domeincontroller regelt alles in het systeem. De GUI zendt de waarden door naar de DomeinController die alles delegeert. (naar mappers, etc)
+        
+    }
+    
+}

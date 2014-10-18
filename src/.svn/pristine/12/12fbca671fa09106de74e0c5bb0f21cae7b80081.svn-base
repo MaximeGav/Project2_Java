@@ -1,0 +1,869 @@
+package persistentie;
+
+import domein.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PersistentieController {
+
+    //Attributes
+    private static PersistentieController persistentieController;
+    private final Connectie connectie;
+
+    private final static String ALLE_STUDENTEN = "SELECT * FROM student";
+    private final static String ALLE_PROMOTOREN = "SELECT * FROM promotor";
+    private final static String BPCOORDINATOR = "SELECT * FROM bpcoordinator";
+    private final static String ALLE_PRESENTATIES = "SELECT * FROM presentatie";
+    private final static String ALLE_CAMPUSSEN = "SELECT * FROM campus";
+    private final static String ALLE_LOKALEN = "SELECT * FROM lokaal";
+    private final static String ALLE_BESCHIKBAARHEDEN = "SELECT * FROM beschikbaarheden";
+    private final static String ALLE_GASTEN = "SELECT * FROM gast";
+    private final static String ALLE_INSCHRIJVINGEN = "SELECT * FROM inschrijvingen";
+
+    //Constructor
+    public PersistentieController() {
+        connectie = new Connectie();
+                
+    }
+
+    //Singleton
+    public static PersistentieController getInstance() {
+        if (persistentieController == null) {
+            persistentieController = new PersistentieController();
+        }
+        return persistentieController;
+    }
+
+    public void closeConnection() {
+        connectie.closeConnection();
+    }
+
+    //Methods
+    /**
+     * Geeft een lijst van studenten terug.
+     *
+     * @return lijstStudenten
+     */
+    public List<Student> geefStudenten() {
+
+        List<Student> lijstStudenten = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_STUDENTEN);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int promotorId = resultSet.getInt("promotorId");
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+                String wachtwoord = resultSet.getString("wachtwoord");
+
+                Student student = new Student(id, voornaam, familienaam, email, wachtwoord, promotorId);
+                lijstStudenten.add(student);
+            }
+            statement.close();
+            return lijstStudenten;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
+     * Geeft een lijst van promotoren terug.
+     *
+     * @return lijstPromotoren
+     */
+    public List<Promotor> geefPromotoren() {
+        List<Promotor> lijstPromotoren = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_PROMOTOREN);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+                String wachtwoord = resultSet.getString("wachtwoord");
+                int aantalKeerJury = resultSet.getInt("aantalKeerJury");
+                int aantalKeerExterneJury = resultSet.getInt("aantalKeerExterneJury");
+
+                Promotor promotor = new Promotor(id, voornaam, familienaam, email, wachtwoord, aantalKeerJury, aantalKeerExterneJury);
+                lijstPromotoren.add(promotor);
+            }
+            statement.close();
+            return lijstPromotoren;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Geeft de bpcoordinator terug.
+     *
+     * @return bpcoordinator
+     */
+    public BPCoordinator geefBPCoordinator() {
+        Statement statement;
+        BPCoordinator bpc = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(BPCOORDINATOR);
+
+            while (resultSet.next()) {
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+                String wachtwoord = resultSet.getString("wachtwoord");
+
+                bpc = new BPCoordinator(voornaam, familienaam, email, wachtwoord);
+            }
+            statement.close();
+
+            return bpc;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void voegStudentToe(Student student) {
+        PreparedStatement invoerStudent;
+        try {
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            invoerStudent = connection.prepareStatement("INSERT INTO student " + "( voornaam, familienaam, emailadres, wachtwoord) " + "VALUES ( ?, ?, ?, ?)");
+
+            invoerStudent.setString(1, student.getVoornaam());
+            invoerStudent.setString(2, student.getFamnaam());
+            invoerStudent.setString(3, student.getEmail());
+            invoerStudent.setString(4, student.getWachtwoord());
+
+            invoerStudent.executeUpdate();
+
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    public void voegPromotorToe(Promotor promotor) {
+        PreparedStatement invoerPromotor;
+        try {
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            invoerPromotor = connection.prepareStatement("INSERT INTO student " + "( voornaam, familienaam, emailadres, wachtwoord) " + "VALUES ( ?, ?, ?, ?)");
+
+            invoerPromotor.setString(1, promotor.getVoornaam());
+            invoerPromotor.setString(2, promotor.getFamnaam());
+            invoerPromotor.setString(3, promotor.getEmail());
+            invoerPromotor.setString(4, promotor.getWachtwoord());
+
+            invoerPromotor.executeUpdate();
+
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    public void kenPromotorToe(int studentId, int promotorId) {
+        PreparedStatement preparedStmt;
+        try {
+            //Connection connection = PersistentieController.getInstance().getConnection();
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            // create the java mysql update preparedstatement
+            String query = "UPDATE student SET promotorId = ? WHERE id = ?";
+            preparedStmt = connection.prepareStatement(query);
+            preparedStmt.setInt(1, promotorId);
+            preparedStmt.setInt(2, studentId);
+
+            // execute the java preparedstatement
+            preparedStmt.executeUpdate();
+
+            findStudentById(studentId).setPromotorId(promotorId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Student findStudentById(int studentId) {
+
+        Statement statement;
+        Student student = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM student WHERE id = " + studentId);
+
+            while (resultSet.next()) {
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+                String wachtwoord = resultSet.getString("wachtwoord");
+                int promotorId = resultSet.getInt("promotorId");
+
+                student = new Student(studentId, voornaam, familienaam, email, wachtwoord, promotorId);
+            }
+            statement.close();
+
+            return student;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+    }
+
+    public Promotor findPromotorById(int promotorId) {
+
+        Statement statement;
+        Promotor promotor = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM promotor WHERE id = " + promotorId);
+
+            while (resultSet.next()) {
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+                String wachtwoord = resultSet.getString("wachtwoord");
+                int aantalKeerJury = resultSet.getInt("aantalKeerJury");
+                int aantalKeerExterneJury = resultSet.getInt("aantalKeerExterneJury");
+
+                promotor = new Promotor(voornaam, familienaam, email, wachtwoord, aantalKeerJury, aantalKeerExterneJury);
+            }
+            statement.close();
+
+            return promotor;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+
+    }
+
+    public Connection getConnection() {
+        return connectie.getConnection();
+    }
+
+    public void bewaarPresentatie(Presentatie presentatie) {
+        PreparedStatement invoerPresentatie;
+        try {
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            invoerPresentatie = connection.prepareStatement("INSERT INTO presentatie " + "(dag,tijdsvak,lokaalId,campusId,studentId) " + "VALUES ( ?, ?, ?, ?, ?)");
+
+            invoerPresentatie.setInt(1, presentatie.getDag());
+            invoerPresentatie.setInt(2, presentatie.getTijdsvak());
+            invoerPresentatie.setInt(3, presentatie.getLokaalId());
+            invoerPresentatie.setInt(4, presentatie.getCampusId());
+            invoerPresentatie.setInt(5, presentatie.getStudentID());
+
+            invoerPresentatie.executeUpdate();
+
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        } finally {
+            //PersistentieController.getInstance().closeConnection();
+        }
+    }
+
+    public List<Presentatie> geefPresentaties() {
+        List<Presentatie> lijstPresentaties = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_PRESENTATIES);
+
+            while (resultSet.next()) {
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+                int lokaalId = resultSet.getInt("lokaalId");
+                int campusId = resultSet.getInt("campusId");
+                int studentId = resultSet.getInt("studentId");
+
+                Presentatie presentatie = new Presentatie(dag, tijdsvak, lokaalId, campusId, studentId);
+                //JOptionPane.showMessageDialog(null, dag + " " + tijdsvak + " " + lokaal);
+                lijstPresentaties.add(presentatie);
+            }
+            statement.close();
+            return lijstPresentaties;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public List<Presentatie> findPresentatiesByLokaalId(int lokaalId) {
+        List<Presentatie> lijstPresentaties = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM presentatie WHERE lokaalId = " + lokaalId);
+
+            while (resultSet.next()) {
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+                int campusId = resultSet.getInt("campusId");
+                int studentId = resultSet.getInt("studentId");
+
+                Presentatie presentatie = new Presentatie(dag, tijdsvak, lokaalId, campusId, studentId);
+                lijstPresentaties.add(presentatie);
+            }
+            statement.close();
+            return lijstPresentaties;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Presentatie findPresentatieByDagAndTijdsvak(int dagNr, int tijdsvakNr) {
+
+        Statement statement;
+        Presentatie presentatie = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM presentatie WHERE dag = " + dagNr + " AND tijdsvak = " + tijdsvakNr);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+                int lokaalId = resultSet.getInt("lokaalId");
+                int campusId = resultSet.getInt("campusId");
+                int studentId = resultSet.getInt("studentId");
+
+                presentatie = new Presentatie(id, dag, tijdsvak, lokaalId, campusId, studentId);
+            }
+            statement.close();
+
+            return presentatie;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+    }
+    
+    public Presentatie findPresentatieById(int id) {
+
+        Statement statement;
+        Presentatie presentatie = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM presentatie WHERE id = " + id);
+
+            while (resultSet.next()) {
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+                int lokaalId = resultSet.getInt("lokaalId");
+                int campusId = resultSet.getInt("campusId");
+                int studentId = resultSet.getInt("studentId");
+
+                presentatie = new Presentatie(id, dag, tijdsvak, lokaalId, campusId, studentId);
+
+            }
+            statement.close();
+
+            return presentatie;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+    }
+
+    public Presentatie findPresentatieByStudentId(int studentId) {
+
+        Statement statement;
+        Presentatie presentatie = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM presentatie WHERE studentId = " + studentId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+                int lokaalId = resultSet.getInt("lokaalId");
+                int campusId = resultSet.getInt("campusId");
+
+                presentatie = new Presentatie(id, dag, tijdsvak, lokaalId, campusId, studentId);
+
+            }
+            statement.close();
+
+            return presentatie;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+    }
+    
+    public List<Campus> geefCampussen() {
+        List<Campus> lijstCampussen = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_CAMPUSSEN);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String naam = resultSet.getString("naam");
+
+                Campus campus = new Campus(id, naam);
+                lijstCampussen.add(campus);
+            }
+            statement.close();
+            return lijstCampussen;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public List<Lokaal> geefLokalen() {
+        List<Lokaal> lijstLokalen = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_LOKALEN);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String naam = resultSet.getString("naam");
+                int campusId = resultSet.getInt("campusId");
+                int aantalPlaatsen = resultSet.getInt("maxAantalPlaatsen");
+
+                Lokaal lokaal = new Lokaal(id, naam, campusId, aantalPlaatsen);
+                lijstLokalen.add(lokaal);
+            }
+            statement.close();
+            return lijstLokalen;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public List<Lokaal> findLokalenByCampusId(int campusId) {
+        List<Lokaal> lijstLokalen = new ArrayList<>();
+        
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM lokaal WHERE campusId = " + campusId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String naam = resultSet.getString("naam");
+                int aantalPlaatsen = resultSet.getInt("maxAantalPlaatsen");
+
+                Lokaal lokaal = new Lokaal(id, naam, campusId, aantalPlaatsen);
+                lijstLokalen.add(lokaal);
+            }
+            statement.close();
+
+            return lijstLokalen;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+    }
+    
+    public Campus findCampusById(int campusId) {
+
+        Statement statement;
+        Campus campus = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM campus WHERE id = " + campusId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String naam = resultSet.getString("naam");
+
+                campus = new Campus(id, naam);
+            }
+            statement.close();
+
+            return campus;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+
+    }
+    
+    public Lokaal findLokaalById(int lokaalId) {
+
+        Statement statement;
+        Lokaal lokaal = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM lokaal WHERE id = " + lokaalId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String naam = resultSet.getString("naam");
+                int campusId = resultSet.getInt("campusId");
+                int maxAantalPlaatsen = resultSet.getInt("maxAantalPlaatsen");
+
+                lokaal = new Lokaal(id, naam, campusId, maxAantalPlaatsen);
+            }
+            statement.close();
+
+            return lokaal;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+
+    }
+    
+    public List<Beschikbaarheid> geefBeschikbaarheden() {
+
+        List<Beschikbaarheid> lijstBeschikbaarheden = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_BESCHIKBAARHEDEN);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+                int promotorId = resultSet.getInt("promotorId");
+
+                Beschikbaarheid beschikbaarheid = new Beschikbaarheid(id, dag, tijdsvak, promotorId);
+                lijstBeschikbaarheden.add(beschikbaarheid);
+            }
+            statement.close();
+            return lijstBeschikbaarheden;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public List<Beschikbaarheid> findBeschikbaarhedenByPromotorId(int promotorId) {
+        List<Beschikbaarheid> lijstBeschikbaarheden = new ArrayList<>();
+        
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM beschikbaarheden WHERE promotorId = " + promotorId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int dag = resultSet.getInt("dag");
+                int tijdsvak = resultSet.getInt("tijdsvak");
+
+                Beschikbaarheid beschikbaarheid = new Beschikbaarheid(id, dag, tijdsvak, promotorId);
+                lijstBeschikbaarheden.add(beschikbaarheid);
+            }
+            statement.close();
+
+            return lijstBeschikbaarheden;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+    }
+    
+    public void verhoogAantalKeerJury(int promotorId, int aantalKeerJury) {
+        PreparedStatement preparedStmt;
+        try {
+            //Connection connection = PersistentieController.getInstance().getConnection();
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            // create the java mysql update preparedstatement
+            String query = "UPDATE promotor SET aantalKeerJury = ? WHERE id = ?";
+            //System.out.println(aantalKeerJury);
+            preparedStmt = connection.prepareStatement(query);
+            preparedStmt.setInt(1, aantalKeerJury);
+            preparedStmt.setInt(2, promotorId);
+
+            // execute the java preparedstatement
+            preparedStmt.executeUpdate();
+
+            findPromotorById(promotorId).setAantalKeerJury(aantalKeerJury);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void planningAangepassen(int presentatieId, int dag, int tijdsVak, int campusId, int lokaalId, int studentId)
+    {
+        PreparedStatement preparedStmt;
+        try {
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            // create the java mysql update preparedstatement
+            /*String query = "UPDATE presentatie SET dag = ? AND tijdsvak = ? AND lokaalId = ? AND campusId = ? AND studentId = ? WHERE id = ?";*/
+            String query = "UPDATE presentatie SET dag = ?, tijdsvak = ?, lokaalId = ?, campusId = ?, studentId = ? WHERE id = ?";
+      
+            preparedStmt = connection.prepareStatement(query);
+            
+            preparedStmt.setInt(1, dag);
+            preparedStmt.setInt(2, tijdsVak);
+            preparedStmt.setInt(3, lokaalId);
+            preparedStmt.setInt(4, campusId);
+            preparedStmt.setInt(5, studentId);
+            preparedStmt.setInt(6, presentatieId);
+            // execute the java preparedstatement
+            
+          preparedStmt.executeUpdate();
+          
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public List<Gast> geefGasten() {
+
+        List<Gast> lijstGasten = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery(ALLE_GASTEN);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+
+                Gast gast = new Gast(id, voornaam, familienaam, email);
+                lijstGasten.add(gast);
+            }
+            statement.close();
+            return lijstGasten;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public Gast findGastById(int gastId) {
+
+        Statement statement;
+        Gast gast = null;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM gast WHERE id = " + gastId);
+
+            while (resultSet.next()) {
+                String voornaam = resultSet.getString("voornaam");
+                String familienaam = resultSet.getString("familienaam");
+                String email = resultSet.getString("email");
+
+                gast = new Gast(gastId, voornaam, familienaam, email);
+            }
+            statement.close();
+
+            return gast;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            //closeConnection();
+        }
+        return null;
+
+    }
+    
+    public List<Inschrijving> findInschrijvingenByGastId(int gastId) {
+
+        List<Inschrijving> lijstInschrijvingen = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM inschrijvingen WHERE gastId = " + gastId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int presentatieId = resultSet.getInt("presentatieId");
+                boolean isGoedgekeurd = resultSet.getBoolean("isGoedgekeurd");
+
+                Inschrijving inschrijving = new Inschrijving(id, presentatieId, gastId, isGoedgekeurd);
+                lijstInschrijvingen.add(inschrijving);
+            }
+            statement.close();
+            return lijstInschrijvingen;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public List<Inschrijving> findInschrijvingenByPresentatieId(int presentatieId) {
+
+        List<Inschrijving> lijstInschrijvingen = new ArrayList<>();
+
+        // create Statement for querying database
+        Statement statement;
+        Connection connection = PersistentieController.getInstance().getConnection();
+
+        try {
+            statement = connection.createStatement();
+
+            // query database
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM inschrijvingen WHERE presentatieId = " + presentatieId);
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int gastId = resultSet.getInt("gastId");
+                boolean isGoedgekeurd = resultSet.getBoolean("isGoedgekeurd");
+
+                Inschrijving inschrijving = new Inschrijving(id, presentatieId, gastId, isGoedgekeurd);
+                lijstInschrijvingen.add(inschrijving);
+            }
+            statement.close();
+            return lijstInschrijvingen;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    public void inschrijvingGoedkeuren(int gastId, int presentatieId) { //ga ook
+        PreparedStatement preparedStmt;
+        try {
+            //Connection connection = PersistentieController.getInstance().getConnection();
+            Connection connection = PersistentieController.getInstance().getConnection();
+
+            // create the java mysql update preparedstatement
+            String query = "UPDATE inschrijvingen SET isGoedgekeurd = ? WHERE gastId = ? AND presentatieId = ?";
+            preparedStmt = connection.prepareStatement(query);
+            preparedStmt.setBoolean(1, Boolean.TRUE);
+            preparedStmt.setInt(2, gastId);
+            preparedStmt.setInt(3, presentatieId);
+
+            // execute the java preparedstatement
+            preparedStmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+}

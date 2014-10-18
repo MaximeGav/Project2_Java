@@ -1,0 +1,272 @@
+package gui;
+
+import domein.DomeinController;
+import domein.Promotor;
+import domein.Student;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.List;
+import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+
+public class GebruikersSelecterenJFrame extends javax.swing.JFrame {
+
+    private final DomeinController dc;
+    private JList lijstStudenten, lijstPromotoren;
+    private DefaultListModel modelStudenten, modelPromotoren;
+    private JLabel lblStudenten, lblPromotoren;
+    private JButton btnSelecteerStudenten, btnSelecteerPromotoren, btnKoppelen;
+    private JTextArea textAreaStudenten, textAreaPromotoren;
+    private List<Student> geselecteerdeStudenten;
+
+    public GebruikersSelecterenJFrame(DomeinController dc) {
+        super();
+        this.dc = dc;
+        this.modelStudenten = new DefaultListModel();
+        this.lijstStudenten = new JList(modelStudenten);
+        this.modelPromotoren = new DefaultListModel();
+        this.lijstPromotoren = new JList(modelPromotoren);
+        this.lijstPromotoren.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        //initComponents(); Methode die niet manueel aangepast kan worden in de code, enkel drag and drop
+        initGUI(); //Eigen geschreven methode om een JFrame aan te maken
+    }
+
+    private void initGUI() {
+        try {
+            this.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("images/small_icon.png")).getImage());
+            getContentPane().setLayout(null);
+            //setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            //setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            setVisible(true);
+            setResizable(true);
+            setTitle("Bachelorproefapplicatie HoGent");
+
+            addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    new StartJFrame(dc);
+                }
+            });
+
+            {
+                lblStudenten = new JLabel("Selecteer de studenten");
+                getContentPane().add(lblStudenten);
+                lblStudenten.setBounds(25, 25, 300, 25);
+            }
+            {
+                JScrollPane pane = new JScrollPane(lijstStudenten);
+
+                pane.setBounds(25, 50, 300, 100);
+                getContentPane().add(pane);
+            }
+            {
+                btnSelecteerStudenten = new JButton("Selecteer");
+                btnSelecteerStudenten.setBounds(25, 160, 100, 25);
+                getContentPane().add(btnSelecteerStudenten);
+                btnSelecteerStudenten.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        geselecteerdeStudenten = lijstStudenten.getSelectedValuesList();
+                        if (geselecteerdeStudenten.isEmpty()) {
+                            JOptionPane.showMessageDialog(null, "U selecteerde geen student(en)");
+                        } else {
+                            for (Student s : geselecteerdeStudenten) {
+                                if (s.hasPromotor()) {
+                                    Promotor promotorVanStudent = dc.findPromotorById(s.getPromotorId());
+                                    dispose();
+                                    new StudentenLoskoppelenVanPromotorJFrame(dc, s, promotorVanStudent);
+                                }
+                            }
+
+                            toonLinkerDeel(e);
+                        }
+                    }
+                });
+            }
+            {
+                JSeparator x = new JSeparator(SwingConstants.VERTICAL);
+                //x.setPreferredSize(new Dimension(3,3));
+                x.setBounds(360, 25, 5, 290);
+                getContentPane().add(x);
+            }
+            for (Student s : dc.geefLijstStudenten()) {
+                modelStudenten.addElement(s);
+            }
+
+            pack();
+            setSize(375, 250);
+
+            // Get the size of the screen
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+            // Determine the new location of the window
+            int w = getSize().width;
+            int h = getSize().height;
+            int x = (dim.width - w) / 2;
+            int y = (dim.height - h) / 2;
+
+            // Move the window
+            setLocation(x, y);
+
+        } catch (Exception e) {
+            //add your error handling code here
+            e.printStackTrace();
+        }
+
+    }
+
+    private void toonLinkerDeel(ActionEvent e) {
+        setSize(750, 365);
+        lijstStudenten.setEnabled(false);
+        btnSelecteerStudenten.setEnabled(false);
+        {
+            String begin = "U selecteerde volgende studenten:\n\n";
+            textAreaStudenten = new JTextArea(begin);
+            textAreaStudenten.setEditable(false);
+            //textArea.setPreferredSize(new Dimension(25, 200));
+            textAreaStudenten.setBounds(25, 200, 300, 100);
+
+            for (Student s : geselecteerdeStudenten) {
+                textAreaStudenten.append(s.getVoornaam() + " " + s.getFamnaam() + "\n");
+            }
+
+            getContentPane().add(textAreaStudenten);
+        }
+        {
+            JScrollPane scrollPane = new JScrollPane(textAreaStudenten, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            scrollPane.setBounds(25, 200, 300, 100);
+            getContentPane().add(scrollPane);
+        }
+
+        /**
+         * PROMOTOR GEDEELTE
+         */
+        {
+            lblPromotoren = new JLabel("Selecteer de promotor");
+            getContentPane().add(lblPromotoren);
+            lblPromotoren.setBounds(400, 25, 300, 25);
+        }
+        {
+            JScrollPane pane = new JScrollPane(lijstPromotoren);
+            pane.setBounds(400, 50, 300, 100);
+            getContentPane().add(pane);
+        }
+        {
+            btnSelecteerPromotoren = new JButton("Selecteer");
+            btnSelecteerPromotoren.setBounds(400, 160, 100, 25);
+            getContentPane().add(btnSelecteerPromotoren);
+            btnSelecteerPromotoren.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    Promotor geselecteerdePromotor = (Promotor) lijstPromotoren.getSelectedValue();
+
+                    if (geselecteerdePromotor == null) {
+                        JOptionPane.showMessageDialog(null, "U selecteerde geen promotor");
+                    } else {
+                        for (Student s : geselecteerdeStudenten) {
+                            if (s.hasPromotor()) {
+                                Promotor promotorVanStudent = dc.findPromotorById(s.getPromotorId());
+                                new StudentenLoskoppelenVanPromotorJFrame(dc, s, promotorVanStudent);
+                            } else {
+                                toonRechterdeel(e, geselecteerdePromotor);
+                            }
+                        }
+
+                    }
+                }
+            });
+        }
+        for (Promotor p : dc.geefLijstPromotoren()) {
+            modelPromotoren.addElement(p); //werkt omdat p = promotor object
+            //modelPromotoren.addElement(p + " (" + p.getAantalKeerJury() + "/" + p.getMAXAANTALSTUDENTEN() + ")"); //werkt nie
+        }
+    }
+
+    private void toonRechterdeel(ActionEvent e, final Promotor geselecteerdePromotor) {
+        {
+            String begin = "U selecteerde volgende promotor:\n\n";
+            textAreaPromotoren = new JTextArea(begin);
+            textAreaPromotoren.setEditable(false);
+            //textAreaPromotoren.setPreferredSize(new Dimension(25, 200));
+            textAreaPromotoren.setBounds(400, 200, 300, 65);
+            textAreaPromotoren.append(geselecteerdePromotor.getVoornaam() + " " + geselecteerdePromotor.getFamnaam());
+
+            getContentPane().add(textAreaPromotoren);
+        }
+        {
+            JScrollPane scrollPane2 = new JScrollPane(textAreaPromotoren);
+            scrollPane2.setBounds(400, 200, 300, 65);
+            getContentPane().add(scrollPane2);
+        }
+        {
+            btnKoppelen = new JButton("Opslaan");
+            btnKoppelen.setBounds(400, 275, 100, 25);
+            getContentPane().add(btnKoppelen);
+            btnKoppelen.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    int aantalKeerJury = geselecteerdePromotor.getAantalKeerJury();
+                    for (Student s : geselecteerdeStudenten) {
+                        if (aantalKeerJury < geselecteerdePromotor.MAXAANTALSTUDENTEN) {
+                            
+                            /*System.out.println(geselecteerdePromotor.getAantalKeerJury());
+                            System.out.println(geselecteerdePromotor.MAXAANTALSTUDENTEN);*/
+                            System.out.println("Aantal keer jury: " + aantalKeerJury);
+                            
+                            geselecteerdePromotor.addStudent(s);
+                            dc.kenPromotorToe(s.getId(), geselecteerdePromotor.getId());
+                            aantalKeerJury++;
+                            dc.verhoogAantalKeerJury(geselecteerdePromotor.getId(), aantalKeerJury);
+                            JOptionPane.showMessageDialog(null, "Student " + s.getVoornaam() + " " + s.getFamnaam() + " werd gekoppeld aan "
+                                    + geselecteerdePromotor.getVoornaam() + " " + geselecteerdePromotor.getFamnaam(), "Koppeling student en promotor geslaagd", JOptionPane.INFORMATION_MESSAGE);
+                            
+                        } else { //Promotor heeft het max aantal studenten bereikt
+                            dispose();
+                            //new StudentenLoskoppelenJFrame(dc, geselecteerdePromotor);
+                            new StudentenLoskoppelenJFrame(dc, geselecteerdePromotor);
+                        }
+                    }
+                    dispose();
+                }
+            });
+        }
+        pack();
+        setSize(750, 365);
+    }
+
+}
+
+/*
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+    */
